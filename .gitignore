@@ -4,3 +4,4 @@
 .env
 .env.auth
 .env.assume
+.DS_Store

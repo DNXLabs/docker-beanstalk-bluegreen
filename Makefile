@@ -30,3 +30,6 @@ google-auth: .env env-GOOGLE_IDP_ID env-GOOGLE_SP_ID
 	docker-compose pull aws
 	docker-compose run --rm aws assume-role.sh > .env.assume
 	cat .env.assume >> .env
+
+build:
+	docker build -t $(IMAGE_NAME) .
