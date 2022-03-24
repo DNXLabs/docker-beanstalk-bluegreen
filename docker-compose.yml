@@ -8,37 +8,37 @@ services:
     env_file:
       - .env
 
-  # google-auth:
-  #   image: public.ecr.aws/dnxsolutions/aws-google-auth:latest
-  #   volumes:
-  #     - ./.env.auth:/work/.env
-  #   environment:
-  #     - GOOGLE_IDP_ID
-  #     - GOOGLE_SP_ID
-  #     - GOOGLE_USERNAME
-  # deploy:
-  #   image: public.ecr.aws/dnxsolutions/ecs-deploy:2.2.1
-  #   env_file:
-  #     - .env.auth
-  #     - .env
-  #     - .env.assume
-  #   volumes:
-  #     - ./task-definition.tpl.json:/work/task-definition.tpl.json
+  google-auth:
+    image: public.ecr.aws/dnxsolutions/aws-google-auth:latest
+    volumes:
+      - ./.env.auth:/work/.env
+    environment:
+      - GOOGLE_IDP_ID
+      - GOOGLE_SP_ID
+      - GOOGLE_USERNAME
+  deploy:
+    image: public.ecr.aws/dnxsolutions/ecs-deploy:2.2.1
+    env_file:
+      - .env.auth
+      - .env
+      - .env.assume
+    volumes:
+      - ./task-definition.tpl.json:/work/task-definition.tpl.json
 
-  # deploy-worker:
-  #   image: public.ecr.aws/dnxsolutions/ecs-deploy:2.2.1
-  #   env_file:
-  #     - .env.auth
-  #     - .env
-  #     - .env.assume
-  #   command: /work/worker-deploy.sh
-  #   volumes:
-  #     - ./worker-task-definition.tpl.json:/work/task-definition.tpl.json
+  deploy-worker:
+    image: public.ecr.aws/dnxsolutions/ecs-deploy:2.2.1
+    env_file:
+      - .env.auth
+      - .env
+      - .env.assume
+    command: /work/worker-deploy.sh
+    volumes:
+      - ./worker-task-definition.tpl.json:/work/task-definition.tpl.json
 
-  # aws:
-  #   image: public.ecr.aws/dnxsolutions/aws-v2:2.2.14-dnx1
-  #   entrypoint: "/bin/bash -c"
-  #   env_file:
-  #     - .env
-  #     - .env.auth
-  #     - .env.assume
+  aws:
+    image: public.ecr.aws/dnxsolutions/aws-v2:2.2.14-dnx1
+    entrypoint: "/bin/bash -c"
+    env_file:
+      - .env
+      - .env.auth
+      - .env.assume

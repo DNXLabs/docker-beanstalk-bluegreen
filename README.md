@@ -2,10 +2,7 @@
 
 This module implements a docker image, that applies the blue-green deployment strategy using python scripts.
 
-![Security](https://github.com/DNXLabs/docker-beanstalk-bluegreen/workflows/Security/badge.svg)
 ![Lint](https://github.com/DNXLabs/docker-beanstalk-bluegreen/workflows/Lint/badge.svg)
-
-Template repository containing automations for docker repositories.
 
 
 ## Blue Green Deployment Strategy
