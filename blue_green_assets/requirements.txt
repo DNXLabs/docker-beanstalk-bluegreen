@@ -1,3 +1,4 @@
+setuptools
 boto3
 requests
 termcolor
