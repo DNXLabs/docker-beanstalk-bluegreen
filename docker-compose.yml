@@ -1,13 +1,6 @@
 version: '3.4'
 
 services:
-  app:
-    build: .
-    volumes:
-      - ./blue_green_assets:/work
-    env_file:
-      - .env
-
   google-auth:
     image: public.ecr.aws/dnxsolutions/aws-google-auth:latest
     volumes:

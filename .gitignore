@@ -4,4 +4,6 @@
 .env
 .env.auth
 .env.assume
+.env.local
 .DS_Store
+__pycache__

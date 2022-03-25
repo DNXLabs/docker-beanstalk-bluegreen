@@ -8,7 +8,16 @@ This module implements a docker image, that applies the blue-green deployment st
 ## Blue Green Deployment Strategy
 
 ### About 
-From a disaster recovery and development perspective, when an application is developed and deployed to an Elastic Beanstalk environment, having two separate, but identical, environments —blue and green— helps increase availability and reduce risk. In this case, the blue environment is the production environment that normally handles live traffic. The CD pipeline architecture creates a clone (green) of the live Elastic Beanstalk environment (blue). The pipeline then swaps the URLs between the two environments. While CodePipeline deploys application code to the original environment —and testing and maintenance take place— the temporary clone environment handles the live traffic. Suppose deployment to the blue environment fails because of issues with the application code. While the code is being corrected and recommitted to the repository, the green environment serves the live traffic, and there is no downtime. Once deployment to the blue environment is successful, and code review and code testing are completed, the pipeline once again swaps the URLs between the green and blue environments. The blue environment starts serving the live traffic again, and the pipeline terminates the temporarily created green environment. Not having to continuously run parallel environments saves costs.
+From a disaster recovery and development perspective, when an application is developed and deployed to an Elastic Beanstalk environment, having two separate, but identical, environments *blue and green* helps increase availability and reduce risk.
+
+In this case, the blue environment is the production environment that normally handles live traffic. 
+
+The container based on this image, creates a clone (green) of the live Elastic Beanstalk environment (blue),     then swaps the URLs between the two environments. While the container deploys application code to the original environment and testing and maintenance take place the temporary clone environment handles the live traffic.
+
+Suppose deployment to the blue environment fails because of issues with the application code. While the code is being corrected and recommitted to the repository, the green environment serves the live traffic, and there is no downtime.
+Once deployment to the blue environment is successful, and code review and code testing are completed, the pipeline once again swaps the URLs between the green and blue environments.
+
+ The blue environment starts serving the live traffic again, and the container terminates the temporarily created green environment. Not having to continuously run parallel environments, saving costs.
 
 ### Execution Diagram of `docker-beanstalk-bluegreen`
 ![](_docs/assets/BlueGreen.png)
@@ -26,19 +35,19 @@ All the steps are done using python:
 
 ### Requirement: Environment variables
 ```shell
-ENV
 AWS_ACCESS_KEY_ID
 AWS_SESSION_TOKEN
 AWS_SECRET_ACCESS_KEY
 AWS_DEFAULT_REGION
-AWS_ACCOUNT_ID
-AWS_ROLE
+
+ENV
 BLUE_ENV_NAME
 GREEN_ENV_NAME
 BEANSTALK_APP_NAME
 CREATE_CONFIG_TEMPLATE_NAME
 BLUE_CNAME_CONFIG_FILE
 ARTIFACTS_S3_BUCKET
+
 ```
 
 ### Build Locally

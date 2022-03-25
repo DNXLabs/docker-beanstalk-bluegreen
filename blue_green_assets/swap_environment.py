@@ -49,11 +49,16 @@ def get_blue_env_address(BLUE_CNAME_CONFIG_FILE):
     return blue_env_url
 
 def get_green_env_info(beanstalkclient, EnvName):
-  response = beanstalkclient.describe_environments(
-  EnvironmentNames=[
-      EnvName
-  ])
-  print("Described the environment")
+  while True:
+      response = beanstalkclient.describe_environments(
+      EnvironmentNames=[
+          EnvName
+      ])
+      if response["Environments"][0]["Status"] == "Ready":
+        break
+      time.sleep(5)
+      print("Waiting the env be ready.")
+
   return response
 
 
