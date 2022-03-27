@@ -6,22 +6,22 @@ import requests
 import time
 
 def main():
-    beanstalkclient = boto3.client('elasticbeanstalk')
+  beanstalkclient = boto3.client('elasticbeanstalk')
 
-    BLUE_ENV_NAME = os.getenv("BLUE_ENV_NAME")
+  BLUE_ENV_NAME = os.getenv("BLUE_ENV_NAME")
 
-    wait_until_env_be_ready(beanstalkclient, BLUE_ENV_NAME)
+  wait_until_env_be_ready(beanstalkclient, BLUE_ENV_NAME)
 
-    blue_env_info = get_env_info(beanstalkclient, BLUE_ENV_NAME)
-    blue_env_cname = blue_env_info["Environments"][0]["CNAME"]
+  blue_env_info = get_env_info(beanstalkclient, BLUE_ENV_NAME)
+  blue_env_cname = blue_env_info["Environments"][0]["CNAME"]
 
-    env_http_response = requests.get("http://"+blue_env_cname)
-    env_reponse_status = env_http_response.status_code
+  env_http_response = requests.get("http://"+blue_env_cname)
+  env_reponse_status = env_http_response.status_code
 
-    if env_reponse_status == 200 or env_reponse_status == 301:
-        return "Ok"
-    else:
-        raise Exception("The environment isn't health")
+  if env_reponse_status == 200 or env_reponse_status == 301:
+      return "Ok"
+  else:
+      raise Exception("The environment isn't health")
 
 def get_env_info(beanstalkclient, env_name):
   response = beanstalkclient.describe_environments(

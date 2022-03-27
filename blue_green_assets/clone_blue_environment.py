@@ -7,13 +7,6 @@ import os
 import time
 
 def main():
-  ENV = os.getenv('ENV')
-  AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-  AWS_SESSION_TOKEN = os.getenv('AWS_SESSION_TOKEN')
-  AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-  AWS_DEFAULT_REGION = os.getenv('AWS_DEFAULT_REGION')
-  AWS_ACCOUNT_ID = os.getenv('AWS_ACCOUNT_ID')
-  AWS_ROLE = os.getenv('AWS_ROLE')
   BLUE_ENV_NAME = os.getenv('BLUE_ENV_NAME')
   GREEN_ENV_NAME = os.getenv('GREEN_ENV_NAME')
   BEANSTALK_APP_NAME = os.getenv('BEANSTALK_APP_NAME')

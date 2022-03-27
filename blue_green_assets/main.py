@@ -11,39 +11,42 @@ from termcolor import colored
 print("name " + str(__name__))
 
 def main():
-    print(colored('hello', 'red'), colored('world', 'green'))
-    print("Initiating blue green deployment process")
+    # print(colored('hello', 'red'), colored('world', 'green'))
+    print(colored("Initiating blue green deployment process", "blue"))
 
     ## Step 1: Cloning the blue env into green env.
     try:
-      print("Clonning the blue environment into green environment")
+      print(colored("Clonning the blue environment into green environment", "blue"))
       clone_blue_environment.main()
     except Exception as err:
-      print("Clonning the blue environment into green environment has failed!")
-      print("Error: " + str(err))
+      print(colored("Clonning the blue environment into green environment has failed!", "red"))
+      print(colored( ("Error: " + str(err)), "red"))
       e = sys.exc_info()[0]
-      print(e)
+      print(colored(e, "red"))
       traceback.print_exc()
       sys.exit(1)
     
     ## Step 2: Swapping blue and green envs URL's.
     try:
+      print(colored("Swapping environment URL's", "blue"))
       swap_environment.main()
+      print(colored("URL's swapped successfully", "green"))
     except Exception as err:
-      print("Swap environment has failed.")
-      print("Error: " + str(err))
+      print(colored("Swap environment has failed.", "red"))
+      print(colored(("Error: " + str(err)), "red"))
       e = sys.exc_info()[0]
-      print(e)
+      print(colored(e, "red"))
       traceback.print_exc()
       sys.exit(1)
 
     # ## Step 3: Deploying the new release into the blue env.
     try:
+      print(colored("New release deployment initiated.", "blue"))
       deploy_release.main()
-      print("New release deployed successfully.")
+      print(colored("New release was deployed successfully.", "green"))
     except Exception as err:
-      print("New release deployment has failed.")
-      print("Error: " + str(err))
+      print(colored("New release deployment has failed.", "red"))
+      print(colored(("Error: " + str(err)), "red"))
       e = sys.exc_info()[0]
       print(e)
       traceback.print_exc()
@@ -51,11 +54,12 @@ def main():
 
     ## Step 4: Health checking the new release deployment.
     try:
+      print(colored("Health checking the new release.", "blue"))
       release_health_check.main()
-      print("The environment is health.")
+      print(colored("The environment is health.", "green"))
     except Exception as err:
-      print("Environment health check has failed.")
-      print("Error: " + str(err))
+      print(colored("Environment health check has failed.", "red"))
+      print(colored(("Error: " + str(err)), "red"))
       e = sys.exc_info()[0]
       print(e)
       traceback.print_exc()
@@ -63,13 +67,13 @@ def main():
 
     ## Step 5: Re-swapping the URL's and terminating the green environment.
     try:
-      print("Re-swapping the URL's and terminating the green environment")
+      print(colored("Re-swapping the URL's and terminating the green environment.", "blue"))
       terminate_green_env.main()
-      print("The blue environment has terminated successfully.")
-      print("The URL's has reswapped successfully.")
+      print(colored("The blue environment has terminated successfully.", "green"))
+      print(colored("The URL's has reswapped successfully.", "green"))
     except Exception as err:
-      print("Re-swapping the URL's and terminating the green environment has failed!")
-      print("Error: " + str(err))
+      print(colored("Re-swapping the URL's and terminating the green environment has failed!", "red"))
+      print(colored(("Error: " + str(err)), "red"))
       e = sys.exc_info()[0]
       print(e)
       traceback.print_exc()
@@ -91,7 +95,7 @@ if __name__ == "__main__":
     CREATE_CONFIG_TEMPLATE_NAME = os.getenv("CREATE_CONFIG_TEMPLATE_NAME")
     BLUE_CNAME_CONFIG_FILE = os.getenv("BLUE_CNAME_CONFIG_FILE")
     ARTIFACTS_S3_BUCKET=os.getenv('ARTIFACTS_S3_BUCKET')
-    print("Successfully get envs")
+    print(colored("Successfully get envs", "green"))
   except Exception as e:
     print("Failed to get environment variable")
     print(str(e))
