@@ -35,17 +35,10 @@ def main():
 
     except Exception as e:
         print('Function failed due to exception.')
-        e = sys.exc_info()[0]
-        print(e)
         traceback.print_exc()
         Status="Failure"
         Message=("Error occured while executing this. The error is %s" %e)
-
-    finally:
-        if (Status =="Success"):
-            put_job_success(Message)
-        else:
-            put_job_failure(Message)
+        raise Exception(e)
 
 def DeleteConfigTemplateBlue(beanstalkclient, AppName,TempName):
     #check if the config template exists
@@ -81,14 +74,3 @@ def DeleteGreenEnvironment(beanstalkclient, EnvName):
             print(response)
             print("Successfully Terminated Green Environment")
             return
-def timeout(event):
-    logging.error('Execution is about to time out, sending failure response to CodePipeline')
-    put_job_failure(event['event']['id'], "FunctionTimeOut")
-
-def put_job_success( message):
-    print('Putting job success')
-    print(message)
-
-def put_job_failure(message):
-    print('Putting job failure')
-    print(message)

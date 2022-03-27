@@ -39,10 +39,7 @@ def main():
           json.dump(BlueEnvCnameFile, fp)
         print ("Created a new CNAME file")
   except Exception as e:
-    print('Function failed due to exception.')
-    e = sys.exc_info()[0]
-    print(e)
-    traceback.print_exc()
+    raise Exception(e)
 
 def CreateConfigTemplateBlue(beanstalkclient, AppName,BlueEnvId,TempName):
   ListTemplates = beanstalkclient.describe_applications(ApplicationNames=[AppName])['Applications'][0]['ConfigurationTemplates']
