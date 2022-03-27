@@ -33,7 +33,10 @@ All the steps are done using python:
 
 ---
 
-### Requirement: Environment variables
+### Requirement: Env variables
+
+#### Required variables
+
 ```shell
 AWS_ACCESS_KEY_ID
 AWS_SESSION_TOKEN
@@ -49,6 +52,12 @@ BLUE_CNAME_CONFIG_FILE
 ARTIFACTS_S3_BUCKET
 
 ```
+
+#### Optional Variables
+```shell
+RELEASE_HEALTH_CHECKING_PATH
+```
+
 
 ### Build Locally
 ```bash
