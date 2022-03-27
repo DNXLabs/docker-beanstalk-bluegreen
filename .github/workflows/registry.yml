@@ -18,9 +18,9 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: |
-            dnxsolutions/aws-module-template
-            ghcr.io/dnxlabs/aws-module-template
-            public.ecr.aws/dnxsolutions/aws-module-template
+            dnxsolutions/beanstalk-bluegreen
+            ghcr.io/dnxlabs/beanstalk-bluegreen
+            public.ecr.aws/dnxsolutions/beanstalk-bluegreen
           tags: |
             type=raw,value=latest
             type=ref,event=tag
