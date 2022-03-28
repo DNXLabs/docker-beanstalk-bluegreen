@@ -1,3 +1,5 @@
+IMAGE_NAME ?= dnxsolutions/beanstalk-bluegreen:latest
+
 env-%: # Check for specific environment variables
 	@ if [ "${${*}}" = "" ]; then echo "Environment variable $* not set"; exit 1;fi
 
@@ -19,3 +21,6 @@ google-auth: .env env-GOOGLE_IDP_ID env-GOOGLE_SP_ID
 
 build:
 	docker build -t $(IMAGE_NAME) .
+
+shell:
+	docker run --rm -it --entrypoint=/bin/bash -v ~/.aws:/root/.aws -v $(PWD):/opt/app $(IMAGE_NAME)

@@ -1,4 +1,4 @@
-setuptools
-boto3
-requests
-termcolor
+setuptools==61.1.1
+boto3==1.21.27
+requests==2.27.1
+termcolor==1.1.0

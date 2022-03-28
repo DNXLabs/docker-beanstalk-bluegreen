@@ -12,8 +12,11 @@ def main():
 
   wait_until_env_be_ready(beanstalkclient, BLUE_ENV_NAME)
 
-  blue_env_info = get_env_info(beanstalkclient, BLUE_ENV_NAME)
-  blue_env_cname = blue_env_info["Environments"][0]["CNAME"]
+  if os.getenv("RELEASE_HEALTH_CHECKING_PATH"):
+    blue_env_cname = os.getenv("RELEASE_HEALTH_CHECKING_PATH")
+  else:
+    blue_env_info = get_env_info(beanstalkclient, BLUE_ENV_NAME)
+    blue_env_cname = blue_env_info["Environments"][0]["CNAME"]
 
   env_http_response = requests.get("http://"+blue_env_cname)
   env_reponse_status = env_http_response.status_code
