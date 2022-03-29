@@ -10,7 +10,7 @@ def main():
     BLUE_ENV_NAME = os.getenv("BLUE_ENV_NAME")
     GREEN_ENV_NAME = os.getenv("GREEN_ENV_NAME")
     BEANSTALK_APP_NAME = os.getenv("BEANSTALK_APP_NAME")
-    CREATE_CONFIG_TEMPLATE_NAME = os.getenv("CREATE_CONFIG_TEMPLATE_NAME")
+    CREATE_CONFIG_TEMPLATE_NAME = "BlueEnvConfig"
 
     beanstalkclient = boto3.client('elasticbeanstalk',region_name='ap-southeast-2')
     try:

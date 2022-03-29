@@ -12,7 +12,7 @@ import time
 def main():
     beanstalkclient = boto3.client("elasticbeanstalk",region_name="ap-southeast-2")
 
-    BLUE_CNAME_CONFIG_FILE = os.getenv("BLUE_CNAME_CONFIG_FILE")
+    BLUE_CNAME_CONFIG_FILE = "blue_cname.json"
     BLUE_ENV_NAME = os.getenv("BLUE_ENV_NAME")
     GREEN_ENV_NAME = os.getenv("GREEN_ENV_NAME")
 

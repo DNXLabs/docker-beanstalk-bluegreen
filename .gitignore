@@ -7,3 +7,4 @@
 .env.local
 .DS_Store
 __pycache__
+blue_cname.json

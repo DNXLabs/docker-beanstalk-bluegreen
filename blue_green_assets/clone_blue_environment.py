@@ -10,8 +10,8 @@ def main():
   BLUE_ENV_NAME = os.getenv('BLUE_ENV_NAME')
   GREEN_ENV_NAME = os.getenv('GREEN_ENV_NAME')
   BEANSTALK_APP_NAME = os.getenv('BEANSTALK_APP_NAME')
-  CREATE_CONFIG_TEMPLATE_NAME = os.getenv('CREATE_CONFIG_TEMPLATE_NAME')
-  BLUE_CNAME_CONFIG_FILE = os.getenv('BLUE_CNAME_CONFIG_FILE')
+  CREATE_CONFIG_TEMPLATE_NAME = "BlueEnvConfig"
+  BLUE_CNAME_CONFIG_FILE = "blue_cname.json"
   beanstalkclient = boto3.client('elasticbeanstalk',region_name='ap-southeast-2')
   try:
     BlueEnvInfo=GetBlueEnvInfo(beanstalkclient, BLUE_ENV_NAME)
@@ -61,7 +61,6 @@ def GetBlueEnvInfo(beanstalkclient, EnvName):
   EnvironmentNames=[
       EnvName
   ])
-  print("Described the environment")
   return response
 
 def CreateGreenEnvironment(beanstalkclient, EnvName,ConfigTemplate,AppVersion,AppName):
@@ -93,7 +92,6 @@ def get_green_env_info(beanstalkclient, EnvName):
   EnvironmentNames=[
       EnvName
   ])
-  print("Described the environment")
   return response
 
 def timeout(event):
