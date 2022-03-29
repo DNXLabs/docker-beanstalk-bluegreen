@@ -7,12 +7,12 @@ from botocore.exceptions import ClientError
 
 def main():
     VERSION_LABEL = strftime("%Y%m%d%H%M%S")
-    BUCKET_KEY = os.getenv('ENV') + '/deployment/DeploymentPackage.zip'
-    ARTIFACTS_S3_BUCKET=os.getenv('ARTIFACTS_S3_BUCKET')
+    BUCKET_KEY = os.getenv('S3_ARTIFACTS_OBJECT')
+    S3_ARTIFACTS_BUCKET=os.getenv('S3_ARTIFACTS_BUCKET')
     BLUE_ENV_NAME = os.getenv("BLUE_ENV_NAME")
     BEANSTALK_APP_NAME = os.getenv("BEANSTALK_APP_NAME")
 
-    if not create_new_version(VERSION_LABEL, BUCKET_KEY, ARTIFACTS_S3_BUCKET, BEANSTALK_APP_NAME):
+    if not create_new_version(VERSION_LABEL, BUCKET_KEY, S3_ARTIFACTS_BUCKET, BEANSTALK_APP_NAME):
         raise Exception("Create new version.")
     # Wait for the new version to be consistent before deploying
     sleep(5)
@@ -21,7 +21,7 @@ def main():
 
 
 
-def create_new_version(VERSION_LABEL, BUCKET_KEY, ARTIFACTS_S3_BUCKET, BEANSTALK_APP_NAME):
+def create_new_version(VERSION_LABEL, BUCKET_KEY, S3_ARTIFACTS_BUCKET, BEANSTALK_APP_NAME):
     """
     Creates a new application version in AWS Elastic Beanstalk
     """
@@ -37,7 +37,7 @@ def create_new_version(VERSION_LABEL, BUCKET_KEY, ARTIFACTS_S3_BUCKET, BEANSTALK
             VersionLabel=VERSION_LABEL,
             Description='New release azure devops',
             SourceBundle={
-                'S3Bucket': ARTIFACTS_S3_BUCKET,
+                'S3Bucket': S3_ARTIFACTS_BUCKET,
                 'S3Key': BUCKET_KEY
             },
             Process=True

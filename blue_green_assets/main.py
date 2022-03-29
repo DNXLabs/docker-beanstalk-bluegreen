@@ -82,7 +82,6 @@ def main():
 
 if __name__ == "__main__":
   try:
-    ENV = os.getenv("ENV")
     AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
     AWS_SESSION_TOKEN = os.getenv("AWS_SESSION_TOKEN")
     AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
@@ -92,9 +91,7 @@ if __name__ == "__main__":
     BLUE_ENV_NAME = os.getenv("BLUE_ENV_NAME")
     GREEN_ENV_NAME = os.getenv("GREEN_ENV_NAME")
     BEANSTALK_APP_NAME = os.getenv("BEANSTALK_APP_NAME")
-    CREATE_CONFIG_TEMPLATE_NAME = os.getenv("CREATE_CONFIG_TEMPLATE_NAME")
-    BLUE_CNAME_CONFIG_FILE = os.getenv("BLUE_CNAME_CONFIG_FILE")
-    ARTIFACTS_S3_BUCKET=os.getenv('ARTIFACTS_S3_BUCKET')
+    S3_ARTIFACTS_BUCKET=os.getenv('S3_ARTIFACTS_BUCKET')
     print(colored("Successfully get envs", "green"))
   except Exception as e:
     print("Failed to get environment variable")
