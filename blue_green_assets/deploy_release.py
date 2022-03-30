@@ -12,27 +12,29 @@ def main():
     BLUE_ENV_NAME = os.getenv("BLUE_ENV_NAME")
     BEANSTALK_APP_NAME = os.getenv("BEANSTALK_APP_NAME")
 
-    if not create_new_version(VERSION_LABEL, BUCKET_KEY, S3_ARTIFACTS_BUCKET, BEANSTALK_APP_NAME):
-        raise Exception("Create new version.")
-    # Wait for the new version to be consistent before deploying
-    sleep(5)
-    if not deploy_new_version(BEANSTALK_APP_NAME, BLUE_ENV_NAME, VERSION_LABEL):
-        raise Exception("Failed to deploy new version.")
-
-
-
-def create_new_version(VERSION_LABEL, BUCKET_KEY, S3_ARTIFACTS_BUCKET, BEANSTALK_APP_NAME):
-    """
-    Creates a new application version in AWS Elastic Beanstalk
-    """
     try:
-        client = boto3.client('elasticbeanstalk')
+        beanstalkclient = boto3.client('elasticbeanstalk')
     except ClientError as err:
         print("Failed to create boto3 client.\n" + str(err))
         return False
 
+    if not create_new_version(beanstalkclient, VERSION_LABEL, BUCKET_KEY, S3_ARTIFACTS_BUCKET, BEANSTALK_APP_NAME):
+        raise Exception("Create new version.")
+    
+    wait_until_env_be_ready(beanstalkclient, BLUE_ENV_NAME)
+    # Wait for the new version to be consistent before deploying
+    if not deploy_new_version(beanstalkclient, BEANSTALK_APP_NAME, BLUE_ENV_NAME, VERSION_LABEL):
+        raise Exception("Failed to deploy new version.")
+
+
+
+def create_new_version(beanstalkclient, VERSION_LABEL, BUCKET_KEY, S3_ARTIFACTS_BUCKET, BEANSTALK_APP_NAME):
+    """
+    Creates a new application version in AWS Elastic Beanstalk
+    """
+
     try:
-        response = client.create_application_version(
+        response = beanstalkclient.create_application_version(
             ApplicationName=BEANSTALK_APP_NAME,
             VersionLabel=VERSION_LABEL,
             Description='New release azure devops',
@@ -56,18 +58,12 @@ def create_new_version(VERSION_LABEL, BUCKET_KEY, S3_ARTIFACTS_BUCKET, BEANSTALK
         print(str(err))
         return False
 
-def deploy_new_version(BEANSTALK_APP_NAME, BLUE_ENV_NAME, VERSION_LABEL):
+def deploy_new_version(beanstalkclient, BEANSTALK_APP_NAME, BLUE_ENV_NAME, VERSION_LABEL):
     """
     Deploy a new version to AWS Elastic Beanstalk
     """
     try:
-        client = boto3.client('elasticbeanstalk')
-    except ClientError as err:
-        print("Failed to create boto3 client.\n" + str(err))
-        return False
-
-    try:
-        response = client.update_environment(
+        response = beanstalkclient.update_environment(
             ApplicationName=BEANSTALK_APP_NAME,
             EnvironmentName=BLUE_ENV_NAME,
             VersionLabel=VERSION_LABEL,
@@ -78,6 +74,22 @@ def deploy_new_version(BEANSTALK_APP_NAME, BLUE_ENV_NAME, VERSION_LABEL):
 
     print(response)
     return True
+
+def wait_until_env_be_ready(beanstalkclient, ENV_NAME):
+  env_info = get_env_info(beanstalkclient, ENV_NAME)
+  while env_info["Environments"][0]["Status"] != "Ready":
+    print("Waiting the blue environment be Ready!")
+    sleep(5)
+    env_info = get_env_info(beanstalkclient, ENV_NAME)
+  return "Env is ready"
+
+
+def get_env_info(beanstalkclient, env_name):
+  response = beanstalkclient.describe_environments(
+  EnvironmentNames=[
+      env_name
+  ])
+  return response
 
 if __name__ == "__main__":
     main()
