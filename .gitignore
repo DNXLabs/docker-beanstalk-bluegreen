@@ -4,7 +4,7 @@
 .env
 .env.auth
 .env.assume
-.env.local
+.env2*
 .DS_Store
 __pycache__
 blue_cname.json

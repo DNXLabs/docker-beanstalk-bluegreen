@@ -16,9 +16,10 @@ def main():
     blue_env_cname = os.getenv("RELEASE_HEALTH_CHECKING_PATH")
   else:
     blue_env_info = get_env_info(beanstalkclient, BLUE_ENV_NAME)
-    blue_env_cname = blue_env_info["Environments"][0]["CNAME"]
-
-  env_http_response = requests.get("http://"+blue_env_cname)
+    blue_env_cname = "http://" +  blue_env_info["Environments"][0]["CNAME"]
+  
+  print("blue_env_cname: " + blue_env_cname)
+  env_http_response = requests.get(blue_env_cname)
   env_reponse_status = env_http_response.status_code
 
   if env_reponse_status == 200 or env_reponse_status == 301:
@@ -31,7 +32,6 @@ def get_env_info(beanstalkclient, env_name):
   EnvironmentNames=[
       env_name
   ])
-  print("Described the environment")
   return response
 
 def wait_until_env_be_ready(beanstalkclient, ENV_NAME):
