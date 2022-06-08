@@ -16,7 +16,7 @@ def main(BLUE_ENV_NAME, boto_authenticated_client):
     blue_env_cname = "http://" +  blue_env_info["Environments"][0]["CNAME"]
   
   print("blue_env_cname: " + blue_env_cname)
-  env_http_response = requests.get(blue_env_cname)
+  env_http_response = requests.get(blue_env_cname, verify=False)
   env_reponse_status = env_http_response.status_code
 
   if env_reponse_status == 200 or env_reponse_status == 301:
