@@ -1,44 +1,39 @@
-import boto3
 import json
 import traceback
 import sys
 import logging
 import os
 import time
+import aws_authentication
 
-def main():
-  BLUE_ENV_NAME = os.getenv('BLUE_ENV_NAME')
-  GREEN_ENV_NAME = os.getenv('GREEN_ENV_NAME')
-  BEANSTALK_APP_NAME = os.getenv('BEANSTALK_APP_NAME')
-  CREATE_CONFIG_TEMPLATE_NAME = "BlueEnvConfig"
-  BLUE_CNAME_CONFIG_FILE = "blue_cname.json"
-  beanstalkclient = boto3.client('elasticbeanstalk',region_name='ap-southeast-2')
-  BlueEnvInfo=GetBlueEnvInfo(beanstalkclient, BLUE_ENV_NAME)
-  BlueEnvId=(BlueEnvInfo['Environments'][0]['EnvironmentId'])
-  BlueVersionLabel=(BlueEnvInfo['Environments'][0]['VersionLabel'])
+def main(BLUE_ENV_NAME, GREEN_ENV_NAME, BEANSTALK_APP_NAME, boto_authenticated_client):
+  beanstalkclient = boto_authenticated_client.client('elasticbeanstalk',region_name='ap-southeast-2')
+  blue_env_info=get_blue_env_info(beanstalkclient, BLUE_ENV_NAME)
+  blue_env_id=(blue_env_info['Environments'][0]['EnvironmentId'])
+  blue_version_label=(blue_env_info['Environments'][0]['VersionLabel'])
   
   #Calling CreateConfigTemplate API
-  ConfigTemplate=CreateConfigTemplateBlue(beanstalkclient, AppName=(BEANSTALK_APP_NAME),BlueEnvId=BlueEnvId,TempName=CREATE_CONFIG_TEMPLATE_NAME)
-  ReturnedTempName=ConfigTemplate
+  config_template=create_config_template(beanstalkclient, AppName=(BEANSTALK_APP_NAME),blue_env_id=blue_env_id,TempName="BlueEnvConfig")
+  ReturnedTempName=config_template
   if not ReturnedTempName:
     #raise Exception if the Config file does not exist
     raise Exception("There were some issue while creating a Configuration Template from the Blue Environment")
   else:
-    GreenEnvId=CreateGreenEnvironment(beanstalkclient, EnvName=(GREEN_ENV_NAME),ConfigTemplate=ReturnedTempName,AppVersion=BlueVersionLabel,AppName=(BEANSTALK_APP_NAME))
+    green_env_id=create_green_environment(beanstalkclient, env_name=(GREEN_ENV_NAME),config_template=ReturnedTempName,AppVersion=blue_version_label,AppName=(BEANSTALK_APP_NAME))
     
     # wait_green_be_ready(beanstalkclient, GREEN_ENV_NAME)
 
-    print("GreenEnvId: " + GreenEnvId)
-    if GreenEnvId:
+    print("Green environment ID: " + green_env_id)
+    if green_env_id:
       #Create a CNAME Config file
-      BlueEnvCname=(BlueEnvInfo['Environments'][0]['CNAME'])
+      BlueEnvCname=(blue_env_info['Environments'][0]['CNAME'])
       BlueEnvCnameFile = {'BlueEnvUrl': BlueEnvCname}
-      file_name = BLUE_CNAME_CONFIG_FILE
+      file_name = "blue_cname.json"
       with open(file_name, 'w') as fp:
         json.dump(BlueEnvCnameFile, fp)
       print ("Created a new CNAME file")
 
-def CreateConfigTemplateBlue(beanstalkclient, AppName,BlueEnvId,TempName):
+def create_config_template(beanstalkclient, AppName,blue_env_id,TempName):
   ListTemplates = beanstalkclient.describe_applications(ApplicationNames=[AppName])['Applications'][0]['ConfigurationTemplates']
   count = 0
   while count < len(ListTemplates):
@@ -50,30 +45,30 @@ def CreateConfigTemplateBlue(beanstalkclient, AppName,BlueEnvId,TempName):
   response = beanstalkclient.create_configuration_template(
   ApplicationName=AppName,
   TemplateName=TempName,
-  EnvironmentId=BlueEnvId)
+  EnvironmentId=blue_env_id)
   return response['TemplateName']
 
-def GetBlueEnvInfo(beanstalkclient, EnvName):
+def get_blue_env_info(beanstalkclient, env_name):
   response = beanstalkclient.describe_environments(
   EnvironmentNames=[
-      EnvName
+      env_name
   ])
   return response
 
-def CreateGreenEnvironment(beanstalkclient, EnvName,ConfigTemplate,AppVersion,AppName):
-  GetEnvData = (beanstalkclient.describe_environments(EnvironmentNames=[EnvName]))
+def create_green_environment(beanstalkclient, env_name,config_template,AppVersion,AppName):
+  GetEnvData = (beanstalkclient.describe_environments(EnvironmentNames=[env_name]))
   print(GetEnvData)
   InvalidStatus = ["Terminating","Terminated"]
   if not(GetEnvData['Environments']==[]):
     print("Environment Exists")
     if not(GetEnvData['Environments'][0]['Status']) in InvalidStatus:
-      print("Existing Environment with the name %s not in Invalid Status" % EnvName)
+      print("Existing Environment with the name %s not in Invalid Status" % env_name)
       return (GetEnvData['Environments'][0]['EnvironmentId'])
   print ("Creating a new Environment")
   response = beanstalkclient.create_environment(
   ApplicationName=AppName,
-  EnvironmentName=EnvName,
-  TemplateName=ConfigTemplate,
+  EnvironmentName=env_name,
+  TemplateName=config_template,
   VersionLabel=AppVersion)
   return response['EnvironmentId']
 
@@ -84,10 +79,10 @@ def wait_green_be_ready(beanstalkclient, GREEN_ENV_NAME):
     time.sleep(10)
     green_env_info = get_green_env_info(beanstalkclient, GREEN_ENV_NAME)
 
-def get_green_env_info(beanstalkclient, EnvName):
+def get_green_env_info(beanstalkclient, env_name):
   response = beanstalkclient.describe_environments(
   EnvironmentNames=[
-      EnvName
+      env_name
   ])
   return response
 

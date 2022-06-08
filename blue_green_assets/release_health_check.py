@@ -1,14 +1,11 @@
 from __future__ import print_function
 import os
 from time import strftime, sleep
-import boto3
 import requests
 import time
 
-def main():
-  beanstalkclient = boto3.client('elasticbeanstalk')
-
-  BLUE_ENV_NAME = os.getenv("BLUE_ENV_NAME")
+def main(BLUE_ENV_NAME, boto_authenticated_client):
+  beanstalkclient = boto_authenticated_client.client('elasticbeanstalk')
 
   wait_until_env_be_ready(beanstalkclient, BLUE_ENV_NAME)
 

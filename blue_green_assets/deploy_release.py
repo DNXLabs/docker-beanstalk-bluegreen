@@ -1,21 +1,15 @@
 import os
 from time import strftime, sleep
-import boto3
 from botocore.exceptions import ClientError
 
 
 
-def main():
+def main(BUCKET_KEY, S3_ARTIFACTS_BUCKET, BLUE_ENV_NAME, BEANSTALK_APP_NAME, boto_authenticated_client):
     VERSION_LABEL = strftime("%Y%m%d%H%M%S")
-    BUCKET_KEY = os.getenv('S3_ARTIFACTS_OBJECT')
-    S3_ARTIFACTS_BUCKET=os.getenv('S3_ARTIFACTS_BUCKET')
-    BLUE_ENV_NAME = os.getenv("BLUE_ENV_NAME")
-    BEANSTALK_APP_NAME = os.getenv("BEANSTALK_APP_NAME")
-
     try:
-        beanstalkclient = boto3.client('elasticbeanstalk')
+        beanstalkclient = boto_authenticated_client.client('elasticbeanstalk')
     except ClientError as err:
-        print("Failed to create boto3 client.\n" + str(err))
+        print("Failed to create boto3 beanstalk client.\n" + str(err))
         return False
 
     if not create_new_version(beanstalkclient, VERSION_LABEL, BUCKET_KEY, S3_ARTIFACTS_BUCKET, BEANSTALK_APP_NAME):

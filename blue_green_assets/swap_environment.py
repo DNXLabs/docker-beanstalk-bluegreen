@@ -1,4 +1,3 @@
-import boto3
 import json
 import traceback
 import time
@@ -9,12 +8,10 @@ import time
 
 
 
-def main():
-    beanstalkclient = boto3.client("elasticbeanstalk",region_name="ap-southeast-2")
+def main(BLUE_ENV_NAME, GREEN_ENV_NAME, boto_authenticated_client):
+    beanstalkclient = boto_authenticated_client.client("elasticbeanstalk",region_name="ap-southeast-2")
 
     BLUE_CNAME_CONFIG_FILE = "blue_cname.json"
-    BLUE_ENV_NAME = os.getenv("BLUE_ENV_NAME")
-    GREEN_ENV_NAME = os.getenv("GREEN_ENV_NAME")
 
     blue_env_url = get_blue_env_address(BLUE_CNAME_CONFIG_FILE)
     print("Blue env URL: " + str(blue_env_url))
