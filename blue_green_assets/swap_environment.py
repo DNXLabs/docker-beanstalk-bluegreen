@@ -8,16 +8,17 @@ import time
 
 
 
-def main(BLUE_ENV_NAME, GREEN_ENV_NAME, boto_authenticated_client):
+def main(BLUE_ENV_NAME, GREEN_ENV_NAME, S3_ARTIFACTS_BUCKET, boto_authenticated_client):
     beanstalkclient = boto_authenticated_client.client("elasticbeanstalk",region_name="ap-southeast-2")
+    s3client = boto_authenticated_client.client('s3',region_name='ap-southeast-2')
 
-    BLUE_CNAME_CONFIG_FILE = "blue_cname.json"
+    BLUE_CNAME_CONFIG_FILE = "blue_green_assets/blue_cname.json"
 
-    blue_env_url = get_blue_env_address(BLUE_CNAME_CONFIG_FILE)
+    blue_env_url = get_blue_env_address(BLUE_CNAME_CONFIG_FILE, S3_ARTIFACTS_BUCKET, s3client)
     print("Blue env URL: " + str(blue_env_url))
 
 
-    green_env_info = get_green_env_info(beanstalkclient, GREEN_ENV_NAME)
+    green_env_info = get_environment_information(beanstalkclient, GREEN_ENV_NAME)
     green_env_cname = green_env_info["Environments"][0]["CNAME"]
 
     print("Green env CNAME: " + str(green_env_cname))
@@ -27,7 +28,7 @@ def main(BLUE_ENV_NAME, GREEN_ENV_NAME, boto_authenticated_client):
     else:
         while green_env_info["Environments"][0]["Status"] != "Ready":
             time.sleep(10)
-            green_env_info = get_green_env_info(beanstalkclient, GREEN_ENV_NAME)
+            green_env_info = get_environment_information(beanstalkclient, GREEN_ENV_NAME)
         swap_response = swap_urls(beanstalkclient, BLUE_ENV_NAME, GREEN_ENV_NAME)
         if swap_response == "Successful":
             return "Ok"
@@ -37,15 +38,14 @@ def main(BLUE_ENV_NAME, GREEN_ENV_NAME, boto_authenticated_client):
     
 
 
-def get_blue_env_address(BLUE_CNAME_CONFIG_FILE):
+def get_blue_env_address(BLUE_CNAME_CONFIG_FILE, S3_ARTIFACTS_BUCKET, s3client):
     # Opening JSON file
     file_name = BLUE_CNAME_CONFIG_FILE
-    with open(file_name) as json_file:
-        data = json.load(json_file)
+    data = json.loads(s3client.get_object(Bucket=S3_ARTIFACTS_BUCKET, Key=file_name)['Body'].read())
     blue_env_url = data["BlueEnvUrl"]
     return blue_env_url
 
-def get_green_env_info(beanstalkclient, EnvName):
+def get_environment_information(beanstalkclient, EnvName):
   count = 0
   while True:
       response = beanstalkclient.describe_environments(

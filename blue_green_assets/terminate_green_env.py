@@ -1,18 +1,12 @@
-import boto3
-import json
 import traceback
 import time
-import sys
-import logging
 import os
 
-def main():
-    BLUE_ENV_NAME = os.getenv("BLUE_ENV_NAME")
-    GREEN_ENV_NAME = os.getenv("GREEN_ENV_NAME")
-    BEANSTALK_APP_NAME = os.getenv("BEANSTALK_APP_NAME")
+def main(BLUE_ENV_NAME, GREEN_ENV_NAME, BEANSTALK_APP_NAME, boto_authenticated_client):
     CREATE_CONFIG_TEMPLATE_NAME = "BlueEnvConfig"
 
-    beanstalkclient = boto3.client('elasticbeanstalk',region_name='ap-southeast-2')
+    beanstalkclient = boto_authenticated_client.client('elasticbeanstalk',region_name='ap-southeast-2')
+    s3client = boto_authenticated_client.client('s3',region_name='ap-southeast-2')
     try:
         print("Starting the job")
         # Extract the Job Data
@@ -20,7 +14,7 @@ def main():
         DeleteConfigTemplate=DeleteConfigTemplateBlue(beanstalkclient, AppName=(BEANSTALK_APP_NAME),TempName=(CREATE_CONFIG_TEMPLATE_NAME))
         print(DeleteConfigTemplate)
         #re-swapping the urls
-        print("Swapping the URL's")
+        print("Swapping URL's")
         reswap = SwapGreenandBlue(beanstalkclient, SourceEnv=(BLUE_ENV_NAME),DestEnv=(GREEN_ENV_NAME))
         if reswap == "Failure":
             print("Re-Swap did not happen")
@@ -51,7 +45,6 @@ def DeleteConfigTemplateBlue(beanstalkclient, AppName,TempName):
 
 def SwapGreenandBlue(beanstalkclient, SourceEnv, DestEnv):
     GetEnvData = (beanstalkclient.describe_environments(EnvironmentNames=[SourceEnv,DestEnv],IncludeDeleted=False))
-    print(GetEnvData)
     if (((GetEnvData['Environments'][0]['Status']) == "Ready") and ((GetEnvData['Environments'][1]['Status']) == "Ready")):
         response = beanstalkclient.swap_environment_cnames(SourceEnvironmentName=SourceEnv,DestinationEnvironmentName=DestEnv)
         return ("Successful")
@@ -60,7 +53,6 @@ def SwapGreenandBlue(beanstalkclient, SourceEnv, DestEnv):
 
 def DeleteGreenEnvironment(beanstalkclient, EnvName):
     GetEnvData = (beanstalkclient.describe_environments(EnvironmentNames=[EnvName]))
-    print(GetEnvData)
     InvalidStatus = ["Terminating","Terminated"]
     if not(GetEnvData['Environments']==[]):
         if (GetEnvData['Environments'][0]['Status']) in InvalidStatus:

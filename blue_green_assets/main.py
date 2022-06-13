@@ -10,9 +10,6 @@ from termcolor import colored
 import aws_authentication
 
 def main():
-    AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION")
-    AWS_ACCOUNT_ID = os.getenv("AWS_ACCOUNT_ID")
-    AWS_ROLE = os.getenv("AWS_ROLE")
     BLUE_ENV_NAME = os.getenv("BLUE_ENV_NAME")
     GREEN_ENV_NAME = os.getenv("GREEN_ENV_NAME")
     BEANSTALK_APP_NAME = os.getenv("BEANSTALK_APP_NAME")
@@ -27,7 +24,7 @@ def main():
       ## Step 1: Cloning the blue env into green env.
       try:
         print(colored("Clonning the blue environment", "blue"))
-        clone_blue_environment.main(BLUE_ENV_NAME, GREEN_ENV_NAME, BEANSTALK_APP_NAME, boto_authenticated_client)
+        clone_blue_environment.main(BLUE_ENV_NAME, GREEN_ENV_NAME, BEANSTALK_APP_NAME, S3_ARTIFACTS_BUCKET, boto_authenticated_client)
       except Exception as err:
         print(colored("Clonning the blue environment environment has failed!", "red"))
         print(colored( ("Error: " + str(err)), "red"))
@@ -39,8 +36,8 @@ def main():
       ## Step 2: Swapping blue and green envs URL's.
       try:
         print(colored("Swapping environment URL's", "blue"))
-        swap_environment.main(BLUE_ENV_NAME, GREEN_ENV_NAME, boto_authenticated_client)
-        print(colored("URL's swapped successfully", "green"))
+        swap_environment.main(BLUE_ENV_NAME, GREEN_ENV_NAME, S3_ARTIFACTS_BUCKET, boto_authenticated_client)
+        print(colored("URL's swap task finished succesfully", "green"))
       except Exception as err:
         print(colored("Swap environment has failed.", "red"))
         print(colored(("Error: " + str(err)), "red"))
@@ -66,20 +63,20 @@ def main():
       try:
         print(colored("Health checking the new release.", "blue"))
         release_health_check.main(BLUE_ENV_NAME, boto_authenticated_client)
-        print(colored("The environment is health.", "green"))
+        print(colored("Environment is healthy!", "green"))
       except Exception as err:
-        print(colored("Environment health check has failed.", "red"))
+        print(colored("Environment health check has failed!", "red"))
         print(colored(("Error: " + str(err)), "red"))
         e = sys.exc_info()[0]
         print(e)
         traceback.print_exc()
         sys.exit(1)
 
-      ## Step 5: Re-swapping the URL's and terminating the green environment.
+    ## Step 5: Re-swapping the URL's and terminating the green environment.
     if str(sys.argv[1]) == 'cutover':
       try:
         print(colored("Re-swapping the URL's and terminating the green environment.", "blue"))
-        terminate_green_env.main()
+        terminate_green_env.main(BLUE_ENV_NAME, GREEN_ENV_NAME, BEANSTALK_APP_NAME, boto_authenticated_client)
         print(colored("The blue environment has terminated successfully.", "green"))
         print(colored("The URL's has reswapped successfully.", "green"))
       except Exception as err:
@@ -89,6 +86,7 @@ def main():
         print(e)
         traceback.print_exc()
         sys.exit(1)
+
 
 
 if __name__ == "__main__":
