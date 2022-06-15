@@ -17,10 +17,25 @@ def main():
     S3_ARTIFACTS_OBJECT = os.getenv("S3_ARTIFACTS_OBJECT")
 
     boto_authenticated_client = aws_authentication.get_boto_client()
-  
-    # print(colored('hello', 'red'), colored('world', 'green'))
+
+    available_execution_types = ["deploy", "cutover", "full"]
+    execution_type = str(sys.argv[1])
+
+    if execution_type not in available_execution_types:
+      print("Not valid execution type argument: " + execution_type)
+      print(
+            "Available execution types are: \n\
+              -> deploy: Create a new environment, swap URL's and deploy the new release.\n\
+              -> cutover: Apply health checks, reswap URL's and terminate environments.\n\
+              -> full: Apply deploy and then cutover"
+              )
+      
+      sys.exit(1)
+
+
+    print("Execution Type: " + execution_type)
     print(colored("Initiating blue green deployment process", "blue"))
-    if str(sys.argv[1]) == 'deploy':
+    if execution_type == "deploy" or execution_type == "full":
       ## Step 1: Cloning the blue env into green env.
       try:
         print(colored("Clonning the blue environment", "blue"))
@@ -59,6 +74,9 @@ def main():
         traceback.print_exc()
         sys.exit(1)
 
+
+    ## Start cutover phase
+    if execution_type == "cutover" or execution_type == "full":
       # Step 4: Health checking new release deployment.
       try:
         print(colored("Health checking the new release.", "blue"))
@@ -71,9 +89,7 @@ def main():
         print(e)
         traceback.print_exc()
         sys.exit(1)
-
-    ## Step 5: Re-swapping the URL's and terminating the green environment.
-    if str(sys.argv[1]) == 'cutover':
+      ## Step 5: Re-swapping the URL's and terminating the green environment.
       try:
         print(colored("Re-swapping the URL's and terminating the green environment.", "blue"))
         terminate_green_env.main(BLUE_ENV_NAME, GREEN_ENV_NAME, BEANSTALK_APP_NAME, boto_authenticated_client)
@@ -92,21 +108,21 @@ def main():
 if __name__ == "__main__":
   try:
     if "AWS_DEFAULT_REGION" not in os.environ:
-        raise Exception("The environment AWS_DEFAULT_REGION wasn't exposed to the container")
+        raise Exception("The environment variable AWS_DEFAULT_REGION wasn't exposed to the container")
     if "AWS_ACCOUNT_ID" not in os.environ:
-        raise Exception("The environment AWS_ACCOUNT_ID wasn't exposed to the container")
+        raise Exception("The environment variable AWS_ACCOUNT_ID wasn't exposed to the container")
     if "AWS_ROLE" not in os.environ:
-        raise Exception("The environment AWS_ROLE wasn't exposed to the container")
+        raise Exception("The environment variable AWS_ROLE wasn't exposed to the container")
     if "BLUE_ENV_NAME" not in os.environ:
-        raise Exception("The environment BLUE_ENV_NAME wasn't exposed to the container")
+        raise Exception("The environment variable BLUE_ENV_NAME wasn't exposed to the container")
     if "GREEN_ENV_NAME" not in os.environ:
-        raise Exception("The environment GREEN_ENV_NAME wasn't exposed to the container")
+        raise Exception("The environment variable GREEN_ENV_NAME wasn't exposed to the container")
     if "BEANSTALK_APP_NAME" not in os.environ:
-        raise Exception("The environment BEANSTALK_APP_NAME wasn't exposed to the container")
+        raise Exception("The environment variable BEANSTALK_APP_NAME wasn't exposed to the container")
     if "S3_ARTIFACTS_BUCKET" not in os.environ:
-        raise Exception("The environment S3_ARTIFACTS_BUCKET wasn't exposed to the container")
+        raise Exception("The environment variable S3_ARTIFACTS_BUCKET wasn't exposed to the container")
     if "S3_ARTIFACTS_OBJECT" not in os.environ:
-        raise Exception("The environment S3_ARTIFACTS_OBJECT wasn't exposed to the container")
+        raise Exception("The environment variable S3_ARTIFACTS_OBJECT wasn't exposed to the container")
     print(colored("Successfully validated environment variables", "green"))
   except Exception as e:
     print("Failed to get environment variable")

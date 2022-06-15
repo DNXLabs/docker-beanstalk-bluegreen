@@ -22,16 +22,9 @@ def main(BLUE_ENV_NAME, GREEN_ENV_NAME, BEANSTALK_APP_NAME, boto_authenticated_c
         print("URL's swap was completed succesfully")
         print("Deleting the GreenEnvironment")
         DeleteGreenEnvironment(beanstalkclient, EnvName=(GREEN_ENV_NAME))
-        
-        #Set status
-        Status="Success"
-        Message="Successfully reswapped and terminated the Green Environment"
-
     except Exception as e:
         print('Function failed due to exception.')
         traceback.print_exc()
-        Status="Failure"
-        Message=("Error occured while executing this. The error is %s" %e)
         raise Exception(e)
 
 def DeleteConfigTemplateBlue(beanstalkclient, AppName,TempName):
