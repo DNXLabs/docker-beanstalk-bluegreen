@@ -32,7 +32,7 @@ def main():
       
       sys.exit(1)
 
-
+    boto_authenticated_client = aws_authentication.get_boto_client()
     print("Execution Type: " + execution_type)
     print(colored("Initiating blue green deployment process", "blue"))
     if execution_type == "deploy" or execution_type == "full":
@@ -47,7 +47,7 @@ def main():
         print(colored(e, "red"))
         traceback.print_exc()
         sys.exit(1)
-      
+      boto_authenticated_client = aws_authentication.get_boto_client()
       ## Step 2: Swapping blue and green envs URL's.
       try:
         print(colored("Swapping environment URL's", "blue"))
@@ -60,7 +60,7 @@ def main():
         print(colored(e, "red"))
         traceback.print_exc()
         sys.exit(1)
-
+      boto_authenticated_client = aws_authentication.get_boto_client()
       # ## Step 3: Deploying the new release into the blue env.
       try:
         print(colored("New release deployment initiated.", "blue"))
@@ -74,7 +74,7 @@ def main():
         traceback.print_exc()
         sys.exit(1)
 
-
+    boto_authenticated_client = aws_authentication.get_boto_client()
     ## Start cutover phase
     if execution_type == "cutover" or execution_type == "full":
       # Step 4: Health checking new release deployment.
@@ -89,7 +89,9 @@ def main():
         print(e)
         traceback.print_exc()
         sys.exit(1)
+
       ## Step 5: Re-swapping the URL's and terminating the green environment.
+      boto_authenticated_client = aws_authentication.get_boto_client()
       try:
         print(colored("Re-swapping the URL's and terminating the green environment.", "blue"))
         terminate_green_env.main(BLUE_ENV_NAME, GREEN_ENV_NAME, BEANSTALK_APP_NAME, boto_authenticated_client)
