@@ -32,41 +32,41 @@ def main():
       
       sys.exit(1)
 
-
+    boto_authenticated_client = aws_authentication.get_boto_client()
     print("Execution Type: " + execution_type)
     print(colored("Initiating blue green deployment process", "blue"))
     if execution_type == "deploy" or execution_type == "full":
-      ## Step 1: Cloning the blue env into green env.
-      try:
+        ## Step 1: Cloning the blue env into green env.
+        try:
         print(colored("Clonning the blue environment", "blue"))
         clone_blue_environment.main(BLUE_ENV_NAME, GREEN_ENV_NAME, BEANSTALK_APP_NAME, S3_ARTIFACTS_BUCKET, boto_authenticated_client)
-      except Exception as err:
+        except Exception as err:
         print(colored("Clonning the blue environment environment has failed!", "red"))
         print(colored( ("Error: " + str(err)), "red"))
         e = sys.exc_info()[0]
         print(colored(e, "red"))
         traceback.print_exc()
         sys.exit(1)
-      
-      ## Step 2: Swapping blue and green envs URL's.
-      try:
+
+        ## Step 2: Swapping blue and green envs URL's.
+        try:
         print(colored("Swapping environment URL's", "blue"))
         swap_environment.main(BLUE_ENV_NAME, GREEN_ENV_NAME, S3_ARTIFACTS_BUCKET, boto_authenticated_client)
         print(colored("URL's swap task finished succesfully", "green"))
-      except Exception as err:
+        except Exception as err:
         print(colored("Swap environment has failed.", "red"))
         print(colored(("Error: " + str(err)), "red"))
         e = sys.exc_info()[0]
         print(colored(e, "red"))
         traceback.print_exc()
         sys.exit(1)
-
-      # ## Step 3: Deploying the new release into the blue env.
-      try:
+        boto_authenticated_client = aws_authentication.get_boto_client()
+        # ## Step 3: Deploying the new release into the blue env.
+        try:
         print(colored("New release deployment initiated.", "blue"))
         deploy_release.main(S3_ARTIFACTS_OBJECT, S3_ARTIFACTS_BUCKET, BLUE_ENV_NAME, BEANSTALK_APP_NAME, boto_authenticated_client)
         print(colored("New release was deployed successfully.", "green"))
-      except Exception as err:
+        except Exception as err:
         print(colored("New release deployment has failed.", "red"))
         print(colored(("Error: " + str(err)), "red"))
         e = sys.exc_info()[0]
@@ -74,7 +74,7 @@ def main():
         traceback.print_exc()
         sys.exit(1)
 
-
+    boto_authenticated_client = aws_authentication.get_boto_client()
     ## Start cutover phase
     if execution_type == "cutover" or execution_type == "full":
       # Step 4: Health checking new release deployment.
@@ -90,6 +90,7 @@ def main():
         traceback.print_exc()
         sys.exit(1)
       ## Step 5: Re-swapping the URL's and terminating the green environment.
+      boto_authenticated_client = aws_authentication.get_boto_client()
       try:
         print(colored("Re-swapping the URL's and terminating the green environment.", "blue"))
         terminate_green_env.main(BLUE_ENV_NAME, GREEN_ENV_NAME, BEANSTALK_APP_NAME, boto_authenticated_client)
