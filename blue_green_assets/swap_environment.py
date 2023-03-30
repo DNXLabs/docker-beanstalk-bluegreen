@@ -8,18 +8,24 @@ import time
 
 
 
-def main(BLUE_ENV_NAME, GREEN_ENV_NAME, S3_ARTIFACTS_BUCKET, boto_authenticated_client):
-    beanstalkclient = boto_authenticated_client.client("elasticbeanstalk",region_name="ap-southeast-2")
-    s3client = boto_authenticated_client.client('s3',region_name='ap-southeast-2')
+def main(BLUE_ENV_NAME, GREEN_ENV_NAME, S3_ARTIFACTS_BUCKET, boto_authenticated_client, HOSTED_ZONE_ID, RECORDS_LIST):
+    beanstalkclient = boto_authenticated_client.client("elasticbeanstalk", region_name="ap-southeast-2")
+    s3client = boto_authenticated_client.client('s3', region_name='ap-southeast-2')
+    route53_client = boto_authenticated_client.client('route53', region_name='ap-southeast-2')
 
     BLUE_CNAME_CONFIG_FILE = "blue_green_assets/blue_cname.json"
 
-    blue_env_url = get_blue_env_address(BLUE_CNAME_CONFIG_FILE, S3_ARTIFACTS_BUCKET, s3client)
+    blue_env_url = get_env_address(BLUE_CNAME_CONFIG_FILE, S3_ARTIFACTS_BUCKET, s3client)
     print("Blue env URL: " + str(blue_env_url))
 
 
     green_env_info = get_environment_information(beanstalkclient, GREEN_ENV_NAME)
     green_env_cname = green_env_info["Environments"][0]["CNAME"]
+
+
+    create_route53_record(route53_client, HOSTED_ZONE_ID, RECORDS_LIST, green_env_cname)
+
+
 
     print("Green env CNAME: " + str(green_env_cname))
 
@@ -34,11 +40,10 @@ def main(BLUE_ENV_NAME, GREEN_ENV_NAME, S3_ARTIFACTS_BUCKET, boto_authenticated_
             return "Ok"
         else:
             raise Exception("Failed to swap environments!")
-
     
 
 
-def get_blue_env_address(BLUE_CNAME_CONFIG_FILE, S3_ARTIFACTS_BUCKET, s3client):
+def get_env_address(BLUE_CNAME_CONFIG_FILE, S3_ARTIFACTS_BUCKET, s3client):
     # Opening JSON file
     file_name = BLUE_CNAME_CONFIG_FILE
     data = json.loads(s3client.get_object(Bucket=S3_ARTIFACTS_BUCKET, Key=file_name)['Body'].read())
@@ -73,3 +78,28 @@ def swap_urls(beanstalkclient, SourceEnv, DestEnv):
         return ("Successful")
     else:
         return ("Failure")
+
+def create_route53_record(route53_client, HOSTED_ZONE_ID, RECORDS_LIST, green_env_url):
+    for record in eval(RECORDS_LIST):
+        route53_client.change_resource_record_sets(
+            HostedZoneId=HOSTED_ZONE_ID,
+            ChangeBatch={
+                "Changes": [
+                    {
+                        "Action": "UPSERT",
+                        "ResourceRecordSet": {
+                            "Type": "CNAME",
+                            "Name": record,
+                            "Region": "ap-southeast-2",
+                            "SetIdentifier": f"{record} Identifier",
+                            "TTL": 60,
+                            "ResourceRecords": [
+                                {
+                                    "Value": green_env_url,
+                                },
+                            ],
+                        }
+                    },
+                ]
+            }
+        )

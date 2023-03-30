@@ -15,6 +15,8 @@ def main():
     BEANSTALK_APP_NAME = os.getenv("BEANSTALK_APP_NAME")
     S3_ARTIFACTS_BUCKET = os.getenv("S3_ARTIFACTS_BUCKET")
     S3_ARTIFACTS_OBJECT = os.getenv("S3_ARTIFACTS_OBJECT")
+    HOSTED_ZONE_ID = os.getenv("HOSTED_ZONE_ID")
+    RECORDS_LIST = os.getenv("RECORDS_LIST")
 
     boto_authenticated_client = aws_authentication.get_boto_client()
 
@@ -51,7 +53,7 @@ def main():
       ## Step 2: Swapping blue and green envs URL's.
       try:
         print(colored("Swapping environment URL's", "blue"))
-        swap_environment.main(BLUE_ENV_NAME, GREEN_ENV_NAME, S3_ARTIFACTS_BUCKET, boto_authenticated_client)
+        swap_environment.main(BLUE_ENV_NAME, GREEN_ENV_NAME, S3_ARTIFACTS_BUCKET, boto_authenticated_client, HOSTED_ZONE_ID, RECORDS_LIST)
         print(colored("URL's swap task finished succesfully", "green"))
       except Exception as err:
         print(colored("Swap environment has failed.", "red"))
@@ -125,6 +127,10 @@ if __name__ == "__main__":
         raise Exception("The environment variable S3_ARTIFACTS_BUCKET wasn't exposed to the container")
     if "S3_ARTIFACTS_OBJECT" not in os.environ:
         raise Exception("The environment variable S3_ARTIFACTS_OBJECT wasn't exposed to the container")
+    if "HOSTED_ZONE_ID" not in os.environ:
+        raise Exception("The environment variable HOSTED_ZONE_ID wasn't exposed to the container")
+    if "RECORDS_LIST" not in os.environ:
+        raise Exception("The environment variable RECORDS_LIST wasn't exposed to the container")
     print(colored("Successfully validated environment variables", "green"))
   except Exception as e:
     print("Failed to get environment variable")
