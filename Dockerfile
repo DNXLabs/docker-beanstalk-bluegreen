@@ -12,3 +12,4 @@ COPY blue_green_assets .
 COPY testing_env .
 
 ENTRYPOINT [ "python", "/work/main.py" ]
+#ENTRYPOINT [ "python", "/work/test.py" ]

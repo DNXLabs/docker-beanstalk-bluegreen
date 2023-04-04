@@ -8,10 +8,11 @@ import time
 
 
 
-def main(BLUE_ENV_NAME, GREEN_ENV_NAME, S3_ARTIFACTS_BUCKET, boto_authenticated_client, HOSTED_ZONE_ID, RECORDS_LIST):
+def main(BLUE_ENV_NAME, GREEN_ENV_NAME, S3_ARTIFACTS_BUCKET, BEANSTALK_APP_NAME, boto_authenticated_client):
     beanstalkclient = boto_authenticated_client.client("elasticbeanstalk", region_name="ap-southeast-2")
     s3client = boto_authenticated_client.client('s3', region_name='ap-southeast-2')
     route53_client = boto_authenticated_client.client('route53', region_name='ap-southeast-2')
+    ssm_client = boto_authenticated_client.client('ssm', region_name='ap-southeast-2')
 
     BLUE_CNAME_CONFIG_FILE = "blue_green_assets/blue_cname.json"
 
@@ -22,8 +23,14 @@ def main(BLUE_ENV_NAME, GREEN_ENV_NAME, S3_ARTIFACTS_BUCKET, boto_authenticated_
     green_env_info = get_environment_information(beanstalkclient, GREEN_ENV_NAME)
     green_env_cname = green_env_info["Environments"][0]["CNAME"]
 
+    applications_response = get_ssm_parameter(ssm_client, BEANSTALK_APP_NAME)
+    applications_list = applications_response['Parameter']['Value']
 
-    create_route53_record(route53_client, HOSTED_ZONE_ID, RECORDS_LIST, green_env_cname)
+    hosted_zone_id_ssm_response = get_ssm_parameter(ssm_client, "HostedZoneId")
+    hosted_zone_id = hosted_zone_id_ssm_response['Parameter']['Value']
+
+
+    create_route53_records(route53_client, applications_list, green_env_cname, hosted_zone_id)
 
 
 
@@ -79,10 +86,10 @@ def swap_urls(beanstalkclient, SourceEnv, DestEnv):
     else:
         return ("Failure")
 
-def create_route53_record(route53_client, HOSTED_ZONE_ID, RECORDS_LIST, green_env_url):
-    for record in eval(RECORDS_LIST):
+def create_route53_records(route53_client, applications_list, green_env_url, hosted_zone_id):
+    for record in eval(applications_list):
         route53_client.change_resource_record_sets(
-            HostedZoneId=HOSTED_ZONE_ID,
+            HostedZoneId=hosted_zone_id,
             ChangeBatch={
                 "Changes": [
                     {
@@ -103,3 +110,10 @@ def create_route53_record(route53_client, HOSTED_ZONE_ID, RECORDS_LIST, green_en
                 ]
             }
         )
+
+def get_ssm_parameter(client, parameter_name):
+    response = client.get_parameter(
+        Name=parameter_name
+    )
+
+    return response

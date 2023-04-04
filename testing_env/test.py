@@ -43,7 +43,38 @@ def get_boto_client():
     return boto3
 
 
+def get_beanstalk_environtment(beanstalk_client, application_name, template_name, environment_name):
+    response = beanstalk_client.describe_configuration_settings(
+        ApplicationName=application_name,
+        EnvironmentName=environment_name
+    )
+
+    test = response["ConfigurationSettings"][0]["OptionSettings"][36]
+
+    print(response)
+    print()
+    print(test)
+
+
+def get_ssm_parameter(client, parameter_name):
+    response = client.get_parameter(
+        Name=parameter_name
+    )
+    print(response)
+    print(eval(response['Parameter']['Value']))
+    print(eval(response['Parameter']['Value'])[0])
+    print(eval(response['Parameter']['Value'])[1])
+    print(len(eval(response['Parameter']['Value'])))
+    return response
+
+
+
+
 if __name__ == '__main__':
     client = get_boto_client()
-    route53_client = client.client('route53', region_name='ap-southeast-2')
-    create_route53_record(route53_client)
+    # route53_client = client.client('route53', region_name='ap-southeast-2')
+    # beanstalk_client = client.client('elasticbeanstalk', region_name='ap-southeast-2')
+    ssm_client = client.client('ssm', region_name='ap-southeast-2')
+    # create_route53_record(route53_client)
+    # get_beanstalk_environtment(beanstalk_client, "MydealWeb", "template_name", "MyDealWeb-prod-green")
+    get_ssm_parameter(ssm_client, "MyDealWeb")
