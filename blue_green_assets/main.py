@@ -15,6 +15,11 @@ def main():
     BEANSTALK_APP_NAME = os.getenv("BEANSTALK_APP_NAME")
     S3_ARTIFACTS_BUCKET = os.getenv("S3_ARTIFACTS_BUCKET")
     S3_ARTIFACTS_OBJECT = os.getenv("S3_ARTIFACTS_OBJECT")
+    print(f"BLUE_ENV_NAME = {BLUE_ENV_NAME}\n")
+    print(f"GREEN_ENV_NAME = {GREEN_ENV_NAME}\n")
+    print(f"BEANSTALK_APP_NAME = {BEANSTALK_APP_NAME}\n")
+    print(f"S3_ARTIFACTS_BUCKET = {S3_ARTIFACTS_BUCKET}\n")
+    print(f"S3_ARTIFACTS_OBJECT {S3_ARTIFACTS_OBJECT}\n")
 
     boto_authenticated_client = aws_authentication.get_boto_client()
 
