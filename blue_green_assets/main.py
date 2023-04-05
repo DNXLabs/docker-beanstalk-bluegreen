@@ -39,7 +39,7 @@ def main():
       ## Step 1: Cloning the blue env into green env.
       try:
         print(colored("Clonning the blue environment", "blue"))
-        clone_blue_environment.main(BLUE_ENV_NAME, GREEN_ENV_NAME, BEANSTALK_APP_NAME, S3_ARTIFACTS_BUCKET, BEANSTALK_APP_NAME, boto_authenticated_client)
+        clone_blue_environment.main(BLUE_ENV_NAME, GREEN_ENV_NAME, BEANSTALK_APP_NAME, S3_ARTIFACTS_BUCKET, boto_authenticated_client)
       except Exception as err:
         print(colored("Clonning the blue environment environment has failed!", "red"))
         print(colored( ("Error: " + str(err)), "red"))
@@ -51,7 +51,7 @@ def main():
       ## Step 2: Swapping blue and green envs URL's.
       try:
         print(colored("Swapping environment URL's", "blue"))
-        swap_environment.main(BLUE_ENV_NAME, GREEN_ENV_NAME, S3_ARTIFACTS_BUCKET, boto_authenticated_client, HOSTED_ZONE_ID, RECORDS_LIST)
+        swap_environment.main(BLUE_ENV_NAME, GREEN_ENV_NAME, S3_ARTIFACTS_BUCKET, BEANSTALK_APP_NAME, boto_authenticated_client)
         print(colored("URL's swap task finished succesfully", "green"))
       except Exception as err:
         print(colored("Swap environment has failed.", "red"))
