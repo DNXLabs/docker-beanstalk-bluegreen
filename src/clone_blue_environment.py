@@ -26,7 +26,7 @@ def main(BLUE_ENV_NAME, GREEN_ENV_NAME, BEANSTALK_APP_NAME, S3_ARTIFACTS_BUCKET,
       #Create a CNAME Config file
       BlueEnvCname=(blue_env_info['Environments'][0]['CNAME'])
       BlueEnvCnameFile = {'BlueEnvUrl': BlueEnvCname}
-      file_name = "src/blue_cname.json"
+      file_name = "blue_green_assets/blue_cname.json"
       response = s3client.put_object(Bucket=S3_ARTIFACTS_BUCKET, Key=file_name, Body=json.dumps(BlueEnvCnameFile))
 
       print("Created a new CNAME file at S3")
