@@ -4,6 +4,6 @@ services:
   app:
     build: .
     volumes:
-      - ./blue_green_assets:/work
+      - ./src:/work
     env_file:
       - .env
