@@ -16,7 +16,7 @@ def main(BLUE_ENV_NAME, GREEN_ENV_NAME, S3_ARTIFACTS_BUCKET, BEANSTALK_APP_NAME,
     print("Blue env URL: " + str(blue_env_url))
 
 
-    green_env_info, beanstalkclient = get_environment_information(beanstalkclient, boto_authenticated_client, GREEN_ENV_NAME)
+    green_env_info, beanstalkclient = get_environment_information(beanstalkclient, GREEN_ENV_NAME)
     green_env_cname = green_env_info["Environments"][0]["CNAME"]
 
     applications_response = get_ssm_parameter(ssm_client, BEANSTALK_APP_NAME)
@@ -53,7 +53,7 @@ def get_env_address(BLUE_CNAME_CONFIG_FILE, S3_ARTIFACTS_BUCKET, s3client):
     blue_env_url = data["BlueEnvUrl"]
     return blue_env_url
 
-def get_environment_information(beanstalkclient, boto_authenticated_client, EnvName):
+def get_environment_information(beanstalkclient, EnvName):
   env_count = 0
   env_count_for_credentials = 0
 
@@ -73,7 +73,8 @@ def get_environment_information(beanstalkclient, boto_authenticated_client, EnvN
           env_count+=1
       if env_count_for_credentials == 12:
             print("Renewing security token...")
-            beanstalkclient = boto_authenticated_client.client("elasticbeanstalk", region_name="ap-southeast-2")
+            boto_client = aws_authentication.get_boto_client()
+            beanstalkclient = boto_client.client("elasticbeanstalk", region_name="ap-southeast-2")
             env_count_for_credentials=0
       else:
             env_count_for_credentials+=1
