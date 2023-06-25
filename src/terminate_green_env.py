@@ -5,29 +5,29 @@ import os
 def main(BLUE_ENV_NAME, GREEN_ENV_NAME, BEANSTALK_APP_NAME, boto_authenticated_client):
     CREATE_CONFIG_TEMPLATE_NAME = "BlueEnvConfig"
 
-    beanstalkclient = boto_authenticated_client.client('elasticbeanstalk',region_name='ap-southeast-2')
-    s3client = boto_authenticated_client.client('s3',region_name='ap-southeast-2')
+    beanstalkclient = boto_authenticated_client.client('elasticbeanstalk',region_name='us-east-1')
+    s3client = boto_authenticated_client.client('s3',region_name='us-east-1')
     try:
         print("Starting the job")
         # Extract the Job Data
         #Calling DeleteConfigTemplate API
-        DeleteConfigTemplate=DeleteConfigTemplateBlue(beanstalkclient, AppName=(BEANSTALK_APP_NAME),TempName=(CREATE_CONFIG_TEMPLATE_NAME))
+        DeleteConfigTemplate=delete_config_template_blue(beanstalkclient, AppName=(BEANSTALK_APP_NAME), TempName=(CREATE_CONFIG_TEMPLATE_NAME))
         print(DeleteConfigTemplate)
         #re-swapping the urls
         print("Swapping URL's")
-        reswap = SwapGreenandBlue(beanstalkclient, SourceEnv=(BLUE_ENV_NAME),DestEnv=(GREEN_ENV_NAME))
+        reswap = swap_green_blue(beanstalkclient, SourceEnv=(BLUE_ENV_NAME), DestEnv=(GREEN_ENV_NAME))
         if reswap == "Failure":
             print("Re-Swap did not happen")
             raise Exception("Re-Swap did not happen")
         print("URL's swap was completed succesfully")
         print("Deleting the GreenEnvironment")
-        DeleteGreenEnvironment(beanstalkclient, EnvName=(GREEN_ENV_NAME))
+        delete_green_environment(beanstalkclient, EnvName=(GREEN_ENV_NAME))
     except Exception as e:
         print('Function failed due to exception.')
         traceback.print_exc()
         raise Exception(e)
 
-def DeleteConfigTemplateBlue(beanstalkclient, AppName,TempName):
+def delete_config_template_blue(beanstalkclient, AppName, TempName):
     #check if the config template exists
     ListTemplates = beanstalkclient.describe_applications(ApplicationNames=[AppName])['Applications'][0]['ConfigurationTemplates']
     if TempName not in ListTemplates:
@@ -36,7 +36,7 @@ def DeleteConfigTemplateBlue(beanstalkclient, AppName,TempName):
         response = beanstalkclient.delete_configuration_template(ApplicationName=AppName,TemplateName=TempName)
         return ("Config Template Deleted")
 
-def SwapGreenandBlue(beanstalkclient, SourceEnv, DestEnv):
+def swap_green_blue(beanstalkclient, SourceEnv, DestEnv):
     GetEnvData = (beanstalkclient.describe_environments(EnvironmentNames=[SourceEnv,DestEnv],IncludeDeleted=False))
     if (((GetEnvData['Environments'][0]['Status']) == "Ready") and ((GetEnvData['Environments'][1]['Status']) == "Ready")):
         response = beanstalkclient.swap_environment_cnames(SourceEnvironmentName=SourceEnv,DestinationEnvironmentName=DestEnv)
@@ -44,7 +44,7 @@ def SwapGreenandBlue(beanstalkclient, SourceEnv, DestEnv):
     else:
         return ("Failure")
 
-def DeleteGreenEnvironment(beanstalkclient, EnvName):
+def delete_green_environment(beanstalkclient, EnvName):
     GetEnvData = (beanstalkclient.describe_environments(EnvironmentNames=[EnvName]))
     InvalidStatus = ["Terminating","Terminated"]
     if not(GetEnvData['Environments']==[]):
