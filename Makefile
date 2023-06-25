@@ -9,10 +9,6 @@ env-%: # Check for specific environment variables
 	touch .env.auth
 	touch .env.assume
 
-google-auth: .env env-GOOGLE_IDP_ID env-GOOGLE_SP_ID
-	@echo "make .env.auth"
-	docker-compose run --rm google-auth
-
 .env.assume: .env .env.assume env-AWS_ACCOUNT_ID env-AWS_ROLE
 	echo > .env.assume
 	docker-compose pull aws
