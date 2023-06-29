@@ -63,7 +63,6 @@ def get_env_address(BLUE_CNAME_CONFIG_FILE, S3_ARTIFACTS_BUCKET, s3client):
 def get_environment_information(beanstalkclient, EnvName):
     ''' Get informations about a beanstalk environment'''
     env_count = 0
-    env_count_for_credentials = 0
 
     while True:
         response = beanstalkclient.describe_environments(
@@ -72,21 +71,13 @@ def get_environment_information(beanstalkclient, EnvName):
             ])
         if response["Environments"][0]["Status"] == "Ready":
             break
-        time.sleep(5)
+        time.sleep(60)
 
         if env_count == 3:
             print("Waiting the env be ready.")
             env_count = 0
         else:
             env_count += 1
-        if env_count_for_credentials == 12:
-            print("Renewing security token...")
-            boto_client = aws_authentication.get_boto_client()
-            beanstalkclient = boto_client.client(
-                "elasticbeanstalk", region_name="us-east-1")
-            env_count_for_credentials = 0
-        else:
-            env_count_for_credentials += 1
 
     return response, beanstalkclient
 

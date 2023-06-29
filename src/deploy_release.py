@@ -65,7 +65,8 @@ def deploy_new_version(beanstalkclient, BEANSTALK_APP_NAME, BLUE_ENV_NAME, VERSI
         return False
 
     print("The new version was deployed successfully!")
-    print(f"New version environment URL: http://{response['EnvironmentName']}.elasticbeanstalk.com")
+    print(
+        f"New version environment URL: http://{response['EnvironmentName']}.elasticbeanstalk.com")
     return True
 
 

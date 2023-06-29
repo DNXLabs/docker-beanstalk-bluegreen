@@ -7,20 +7,28 @@ import deploy_release
 import release_health_check
 import terminate_green_env
 import aws_authentication
+import time
 
 
 def main():
+    print("------------Initiating blue green deployment process------------\n\n\n")
+    starting_time = time.time()
+
     BLUE_ENV_NAME = os.getenv("BLUE_ENV_NAME")
     GREEN_ENV_NAME = os.getenv("GREEN_ENV_NAME")
     BEANSTALK_APP_NAME = os.getenv("BEANSTALK_APP_NAME")
     S3_ARTIFACTS_BUCKET = os.getenv("S3_ARTIFACTS_BUCKET")
     S3_ARTIFACTS_OBJECT = os.getenv("S3_ARTIFACTS_OBJECT")
 
+    print("Environment variables: \n")
     print(f"BLUE_ENV_NAME = {BLUE_ENV_NAME}\n")
     print(f"GREEN_ENV_NAME = {GREEN_ENV_NAME}\n")
     print(f"BEANSTALK_APP_NAME = {BEANSTALK_APP_NAME}\n")
     print(f"S3_ARTIFACTS_BUCKET = {S3_ARTIFACTS_BUCKET}\n")
     print(f"S3_ARTIFACTS_OBJECT {S3_ARTIFACTS_OBJECT}\n")
+
+    current_release_bucket=""
+    current_release_key=""
 
     available_execution_types = ["deploy", "cutover", "full", "rollback"]
     execution_type = str(sys.argv[1])
@@ -36,16 +44,22 @@ def main():
         sys.exit(1)
 
     boto_authenticated_client = aws_authentication.get_boto_client()
-    print("Execution Type: " + execution_type)
+    print(f"\n Execution Type: {execution_type}\n")
     print("Initiating blue green deployment process")
-    print("\n\n\n ------------------ Initiating Step 1 --------------------- \n\n\n")
-    print("\n\n\n ------------------ Creating Green Env --------------------- \n\n\n")
+
+
+
     if execution_type == "deploy" or execution_type == "full":
+        print("\n\n\n ------------------ Stating Deployment Step 1 --------------------- \n")
+        print("------------------ Creating Green Env --------------------- \n\n\n")
         # Step 1: Cloning the blue env into green env.
         try:
-            print("Clonning the blue environment")
-            clone_blue_environment.main(
+            print("Clonning the blue environment...")
+            start_1 = time.time()
+            previous_release_bucket, previous_release_key = clone_blue_environment.main(
                 BLUE_ENV_NAME, GREEN_ENV_NAME, BEANSTALK_APP_NAME, S3_ARTIFACTS_BUCKET, boto_authenticated_client)
+            print(f"Clonning the blue environment has finished successfully!\n\
+                  \tIt took: {time.time() - start_1} seconds\n")
         except Exception as err:
             clone_blue_environment.rollback_created_env(
                 boto_authenticated_client, GREEN_ENV_NAME
@@ -56,13 +70,18 @@ def main():
             print(str(e))
             traceback.print_exc()
             sys.exit(1)
+
         boto_authenticated_client = aws_authentication.get_boto_client()
+        print("\n\n\n ------------------ Stating Step 2 ---------------------\n")
+        print("------------------ Swapping Domains --------------------- \n\n\n")
         # Step 2: Swapping blue and green envs URL's.
         try:
-            print("Swapping environment URL's")
+            print("Swapping environment Domains...")
+            start_2 = time.time()
             swap_environment.main(BLUE_ENV_NAME, GREEN_ENV_NAME, S3_ARTIFACTS_BUCKET,
                                   BEANSTALK_APP_NAME, boto_authenticated_client)
-            print("URL's swap task finished succesfully")
+            print(f"Swapping environment Domains has finished successfully!\n\
+                    \tIt took: {time.time() - start_2} seconds\n")
         except Exception as err:
             print("Swap environment has failed.")
             print(("Error: " + str(err)))
@@ -75,13 +94,18 @@ def main():
             print(e)
             traceback.print_exc()
             sys.exit(1)
+
         boto_authenticated_client = aws_authentication.get_boto_client()
+        print("\n\n\n ------------------ Stating Step 3 --------------------- \n")
+        print("----------------- New release Deployment --------------------- \n\n\n")
         # ## Step 3: Deploying the new release into the blue env.
         try:
             print("New release deployment initiated.")
+            start_3 = time.time()
             deploy_release.main(S3_ARTIFACTS_OBJECT, S3_ARTIFACTS_BUCKET,
                                 BLUE_ENV_NAME, BEANSTALK_APP_NAME, boto_authenticated_client)
-            print("New release was deployed successfully.")
+            print(f"New release deployment has finished successfully!\n\
+                    \tIt took: {time.time() - start_3} seconds\n")
         except Exception as err:
             print("New release deployment has failed.")
             print(("Error: " + str(err)))
@@ -90,7 +114,6 @@ def main():
             traceback.print_exc()
             sys.exit(1)
 
-    boto_authenticated_client = aws_authentication.get_boto_client()
     # Start cutover phase
     if execution_type == "cutover" or execution_type == "full":
         # Step 4: Health checking new release deployment.
@@ -107,13 +130,16 @@ def main():
             sys.exit(1)
 
         # Step 5: Re-swapping the URL's and terminating the green environment.
+        print("\n\n\n ------------------ Stating Cutover --------------------- \n")
+        print("------------------ Re-swapping the Domains && Killing the green environment --------------------- \n\n\n")
         boto_authenticated_client = aws_authentication.get_boto_client()
         try:
             print("Re-swapping the URL's and terminating the green environment.")
+            time_4 = time.time()
             terminate_green_env.main(
                 BLUE_ENV_NAME, GREEN_ENV_NAME, BEANSTALK_APP_NAME, boto_authenticated_client)
-            print("The green environment has terminated successfully.")
-            print("The URL's has reswapped successfully.")
+            print(f"Re-swapping the URL's and terminating the green environment has finished successfully!\n\
+                    \tIt took: {time.time() - time_4} seconds\n")
         except Exception as err:
             print(
                 "Re-swapping the URL's and terminating the green environment has failed!")
@@ -122,32 +148,45 @@ def main():
             print(e)
             traceback.print_exc()
             sys.exit(1)
-    if execution_type == "rollback":
-        try:
-            print("Re-swapping the URL's and terminating the green environment.")
-            swap_environment.re_swap_dns(
-                boto_authenticated_client, S3_ARTIFACTS_BUCKET, GREEN_ENV_NAME, BLUE_ENV_NAME)
-        except Exception as err:
-            print(
-                "Re-swapping the URL's and terminating the green environment has failed!")
-            print(("Error: " + str(err)))
-            e = sys.exc_info()[0]
-            print(e)
-            traceback.print_exc()
-            sys.exit(1)
-        try:
-            print("Rolling back the blue environment.")
-            clone_blue_environment.rollback_created_env(
-                boto_authenticated_client, GREEN_ENV_NAME
-            )
-            print("The blue environment has rolled back successfully.")
-        except Exception as err:
-            print("Rolling back the blue environment has failed!")
-            print(("Error: " + str(err)))
-            e = sys.exc_info()[0]
-            print(e)
-            traceback.print_exc()
-            sys.exit(1)
+    # if execution_type == "rollback":
+    #     try:
+    #         print("Rolling back the blue environment to the previous version.")
+    #         deploy_release.main(previous_release_key, previous_release_bucket,
+    #                             BLUE_ENV_NAME, BEANSTALK_APP_NAME, boto_authenticated_client)
+    #
+    #     except Exception as err:
+    #         print("Rolling back the blue environment has failed!")
+    #         print(("Error: " + str(err)))
+    #         e = sys.exc_info()[0]
+    #         print(e)
+    #         traceback.print_exc()
+    #         sys.exit(1)
+    #     try:
+    #         print("Re-swapping the URL's and terminating the green environment.")
+    #         swap_environment.re_swap_dns(
+    #             boto_authenticated_client, S3_ARTIFACTS_BUCKET, GREEN_ENV_NAME, BLUE_ENV_NAME)
+    #     except Exception as err:
+    #         print(
+    #             "Re-swapping the URL's and terminating the green environment has failed!")
+    #         print(("Error: " + str(err)))
+    #         e = sys.exc_info()[0]
+    #         print(e)
+    #         traceback.print_exc()
+    #         sys.exit(1)
+    #     try:
+    #         print("Rolling back the blue environment.")
+    #         clone_blue_environment.rollback_created_env(
+    #             boto_authenticated_client, GREEN_ENV_NAME
+    #         )
+    #     except Exception as err:
+    #         print("Rolling back the blue environment has failed!")
+    #         print(("Error: " + str(err)))
+    #         e = sys.exc_info()[0]
+    #         print(e)
+    #         traceback.print_exc()
+    #         sys.exit(1)
+
+
 
 
 if __name__ == "__main__":

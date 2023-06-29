@@ -56,6 +56,5 @@ def delete_green_environment(beanstalkclient, EnvName):
         time.sleep(10)
         if (GreenEnvStatus == 'Ready'):
             response = beanstalkclient.terminate_environment(EnvironmentName=EnvName)
-            print(response)
             print("Successfully Terminated Green Environment")
             return

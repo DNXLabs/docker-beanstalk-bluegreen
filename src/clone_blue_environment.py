@@ -45,6 +45,10 @@ def main(BLUE_ENV_NAME, GREEN_ENV_NAME, BEANSTALK_APP_NAME, S3_ARTIFACTS_BUCKET,
 
             print("Created a new CNAME file at S3")
 
+            current_release_bucket, current_release_key = get_current_release_package(
+                beanstalkclient, BEANSTALK_APP_NAME)
+            return current_release_bucket, current_release_key
+
 
 def create_config_template(beanstalkclient, AppName, blue_env_id, TempName):
     '''Creates a ElasticBeanstalk deployment template and return the Template Name'''
@@ -101,7 +105,7 @@ def wait_green_be_ready(beanstalkclient, GREEN_ENV_NAME):
     green_env_info = get_env_info(beanstalkclient, GREEN_ENV_NAME)
     while green_env_info["Environments"][0]["Status"] != "Ready":
         print("Waiting the blue environment be Ready!")
-        time.sleep(10)
+        time.sleep(60)
         green_env_info = get_env_info(beanstalkclient, GREEN_ENV_NAME)
 
 
@@ -118,3 +122,11 @@ def rollback_created_env(boto_authenticated_client, environment_name):
         EnvironmentId=green_env_info["Environments"][0]["EnvironmentId"]
     )
     return "Environment terminaated successfully!!"
+
+def get_current_release_package(client, application_name):
+    response = client.describe_application_versions(
+        ApplicationName=application_name,
+        MaxRecords=1
+    )
+
+    return response['ApplicationVersions'][0]['SourceBundle']['S3Bucket'], response['ApplicationVersions'][0]['SourceBundle']['S3Key']
