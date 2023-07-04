@@ -1,6 +1,6 @@
 import json
 import time
-import aws_authentication
+import os
 
 
 BLUE_CNAME_CONFIG_FILE = "blue_green_assets/blue_cname.json"
@@ -8,13 +8,13 @@ BLUE_CNAME_CONFIG_FILE = "blue_green_assets/blue_cname.json"
 
 def main(BLUE_ENV_NAME, GREEN_ENV_NAME, S3_ARTIFACTS_BUCKET, BEANSTALK_APP_NAME, boto_authenticated_client):
     beanstalkclient = boto_authenticated_client.client(
-        "elasticbeanstalk", region_name="us-east-1")
+        "elasticbeanstalk", region_name=os.environ['AWS_DEFAULT_REGION'])
     s3client = boto_authenticated_client.client(
-        's3', region_name='us-east-1')
+        's3', region_name=os.environ['AWS_DEFAULT_REGION'])
     route53_client = boto_authenticated_client.client(
-        'route53', region_name='us-east-1')
+        'route53', region_name=os.environ['AWS_DEFAULT_REGION'])
     ssm_client = boto_authenticated_client.client(
-        'ssm', region_name='us-east-1')
+        'ssm', region_name=os.environ['AWS_DEFAULT_REGION'])
 
     blue_env_url = get_env_address(
         BLUE_CNAME_CONFIG_FILE, S3_ARTIFACTS_BUCKET, s3client)
@@ -107,7 +107,7 @@ def create_route53_records(route53_client, applications_list, green_env_url, hos
                         "ResourceRecordSet": {
                             "Type": "CNAME",
                             "Name": record,
-                            "Region": "us-east-1",
+                            "Region": os.environ['AWS_DEFAULT_REGION'],
                             "SetIdentifier": f"{record} Identifier",
                             "TTL": 60,
                             "ResourceRecords": [
@@ -135,9 +135,9 @@ def re_swap_dns(boto_authenticated_client, S3_ARTIFACTS_BUCKET, GREEN_ENV_NAME, 
     '''Re-swap beanstalk environments Domains applying the rollback'''
 
     beanstalkclient = boto_authenticated_client.client(
-        "elasticbeanstalk", region_name="us-east-1")
+        "elasticbeanstalk", region_name=os.environ['AWS_DEFAULT_REGION'])
     s3client = boto_authenticated_client.client(
-        's3', region_name='us-east-1')
+        's3', region_name=os.environ['AWS_DEFAULT_REGION'])
 
     blue_env_url = get_env_address(
         BLUE_CNAME_CONFIG_FILE, S3_ARTIFACTS_BUCKET, s3client

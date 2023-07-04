@@ -5,8 +5,8 @@ import os
 def main(BLUE_ENV_NAME, GREEN_ENV_NAME, BEANSTALK_APP_NAME, boto_authenticated_client):
     CREATE_CONFIG_TEMPLATE_NAME = "BlueEnvConfig"
 
-    beanstalkclient = boto_authenticated_client.client('elasticbeanstalk',region_name='us-east-1')
-    s3client = boto_authenticated_client.client('s3',region_name='us-east-1')
+    beanstalkclient = boto_authenticated_client.client('elasticbeanstalk',region_name=os.environ['AWS_DEFAULT_REGION'])
+    s3client = boto_authenticated_client.client('s3',region_name=os.environ['AWS_DEFAULT_REGION'])
     try:
         print("Starting the job")
         # Extract the Job Data
