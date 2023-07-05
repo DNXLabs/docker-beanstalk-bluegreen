@@ -1,9 +1,13 @@
 from time import strftime, sleep
 from botocore.exceptions import ClientError
-
+import os
 
 def main(BUCKET_KEY, S3_ARTIFACTS_BUCKET, BLUE_ENV_NAME, BEANSTALK_APP_NAME, boto_authenticated_client):
     VERSION_LABEL = strftime("%Y%m%d%H%M%S")
+
+    if "VERSION_LABEL" in os.environ:
+        VERSION_LABEL = os.environ['VERSION_LABEL']
+
     try:
         beanstalkclient = boto_authenticated_client.client('elasticbeanstalk')
     except ClientError as err:
@@ -74,7 +78,7 @@ def wait_until_env_be_ready(beanstalkclient, ENV_NAME):
     env_info = get_env_info(beanstalkclient, ENV_NAME)
     while env_info["Environments"][0]["Status"] != "Ready":
         print("Waiting the blue environment be Ready!")
-        sleep(5)
+        sleep(50)
         env_info = get_env_info(beanstalkclient, ENV_NAME)
     return "Env is ready"
 
