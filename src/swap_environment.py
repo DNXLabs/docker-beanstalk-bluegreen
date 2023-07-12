@@ -134,6 +134,7 @@ def get_ssm_parameter(client, parameter_name):
 def re_swap_dns(boto_authenticated_client, S3_ARTIFACTS_BUCKET, GREEN_ENV_NAME, BLUE_ENV_NAME):
     '''Re-swap beanstalk environments Domains applying the rollback'''
 
+    time.sleep(10)
     beanstalkclient = boto_authenticated_client.client(
         "elasticbeanstalk", region_name=os.environ['AWS_DEFAULT_REGION'])
     s3client = boto_authenticated_client.client(
@@ -143,18 +144,23 @@ def re_swap_dns(boto_authenticated_client, S3_ARTIFACTS_BUCKET, GREEN_ENV_NAME, 
         BLUE_CNAME_CONFIG_FILE, S3_ARTIFACTS_BUCKET, s3client
     )
 
-    green_env_info, beanstalkclient = get_environment_information(
+    green_env_info, client = get_environment_information(
         beanstalkclient, GREEN_ENV_NAME)
     green_env_cname = green_env_info["Environments"][0]["CNAME"]
 
-    if blue_env_url != green_env_cname:
-        return "Nothing to Swap!"
+    blue_env_info, client = get_environment_information(
+        beanstalkclient, BLUE_ENV_NAME)
 
+    if blue_env_url != green_env_cname:
+        print("Nothing to re-swap")
+        return "Nothing to Swap!"
     else:
-        while green_env_info["Environments"][0]["Status"] != "Ready":
+        while green_env_info["Environments"][0]["Status"] != "Ready" and blue_env_info["Environments"][0]["Status"] != "Ready" :
             time.sleep(10)
-            green_env_info = get_environment_information(
+            green_env_info, client = get_environment_information(
                 beanstalkclient, GREEN_ENV_NAME)
+            blue_env_info, client = get_environment_information(
+                beanstalkclient, BLUE_ENV_NAME)
         swap_response = swap_urls(
             beanstalkclient, GREEN_ENV_NAME, BLUE_ENV_NAME)
         if swap_response == "Successful":
