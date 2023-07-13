@@ -1,10 +1,8 @@
 import json
-import logging
 import time
 import os
 
 # noqa: E502
-
 
 def main(BLUE_ENV_NAME, GREEN_ENV_NAME, BEANSTALK_APP_NAME, S3_ARTIFACTS_BUCKET, boto_authenticated_client):
 
@@ -32,8 +30,6 @@ def main(BLUE_ENV_NAME, GREEN_ENV_NAME, BEANSTALK_APP_NAME, S3_ARTIFACTS_BUCKET,
             ReturnedTempName, blue_version_label,
             BEANSTALK_APP_NAME
         )
-
-        # wait_green_be_ready(beanstalkclient, GREEN_ENV_NAME)
 
         print("Green environment ID: " + green_env_id)
         if green_env_id and did_new_env_was_created:
@@ -106,12 +102,14 @@ def wait_green_be_ready(beanstalkclient, GREEN_ENV_NAME):
     green_env_info = get_env_info(beanstalkclient, GREEN_ENV_NAME)
     while green_env_info["Environments"][0]["Status"] != "Ready":
         print("Waiting the blue environment be Ready!")
-        time.sleep(10)
+        time.sleep(60)
         green_env_info = get_env_info(beanstalkclient, GREEN_ENV_NAME)
 
 
 def rollback_created_env(boto_authenticated_client, environment_name):
     ''' Terminate a beanstalk environment'''
+
+    time.sleep(10)
     beanstalkclient = boto_authenticated_client.client(
         'elasticbeanstalk', region_name=os.environ['AWS_DEFAULT_REGION'])
 

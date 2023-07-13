@@ -1,6 +1,7 @@
 from time import strftime, sleep
 from botocore.exceptions import ClientError
 import os
+import swap_environment
 
 def main(BUCKET_KEY, S3_ARTIFACTS_BUCKET, BLUE_ENV_NAME, BEANSTALK_APP_NAME, boto_authenticated_client):
     VERSION_LABEL = strftime("%Y%m%d%H%M%S")
@@ -89,3 +90,26 @@ def get_env_info(beanstalkclient, env_name):
             env_name
         ])
     return response
+
+def rollback_release(client, application_name, environment_name):
+    try:
+        beanstalkclient = client.client('elasticbeanstalk')
+    except ClientError as err:
+        print("Failed to create boto3 beanstalk client.\n" + str(err))
+        return False
+    environment_info, client = swap_environment.get_environment_information(
+        beanstalkclient, environment_name)
+
+    while environment_info["Environments"][0]["Status"] != "Ready":
+        sleep(10)
+        environment_info, client = swap_environment.get_environment_information(
+            beanstalkclient, environment_name)
+
+    response = beanstalkclient.describe_application_versions(
+        ApplicationName=application_name,
+        MaxRecords=2
+    )
+    VERSION_LABEL = response['ApplicationVersions'][-1]['VersionLabel']
+
+    if not deploy_new_version(beanstalkclient, application_name, environment_name, VERSION_LABEL):
+        raise Exception("Failed to deploy new version.")
