@@ -20,7 +20,7 @@ Once deployment to the blue environment is successful, and code review and code 
  The blue environment starts serving the live traffic again, and the container terminates the temporarily created green environment. Not having to continuously run parallel environments, saving costs.
 
 ### Execution Diagram of `docker-beanstalk-bluegreen`
-![](_docs/assets/BlueGreen.png)
+![](_docs/assets/BlueGreen-v2.png)
 
 All the steps are done using python:
 1. The first stage clones the blue environment, which results in a green environment.
@@ -55,6 +55,7 @@ S3_ARTIFACTS_OBJECT
 RELEASE_HEALTH_CHECKING_PATH
 AUTH_METHOD
 SSO_PROFILE
+VERSION_LABEL
 ```
 
 
