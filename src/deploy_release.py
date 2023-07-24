@@ -3,7 +3,7 @@ from botocore.exceptions import ClientError
 import os
 import swap_environment
 
-def release_deployment(BUCKET_KEY, S3_ARTIFACTS_BUCKET, BLUE_ENV_NAME, BEANSTALK_APP_NAME, boto_authenticated_client, create_app_version = True):
+def release_deployment(BLUE_ENV_NAME, BEANSTALK_APP_NAME, boto_authenticated_client):
     VERSION_LABEL = strftime("%Y%m%d%H%M%S")
 
     if "VERSION_LABEL" in os.environ:
@@ -14,10 +14,6 @@ def release_deployment(BUCKET_KEY, S3_ARTIFACTS_BUCKET, BLUE_ENV_NAME, BEANSTALK
     except ClientError as err:
         print("Failed to create boto3 beanstalk client.\n" + str(err))
         return False
-
-    if create_app_version:
-        if not create_new_version(beanstalkclient, VERSION_LABEL, BUCKET_KEY, S3_ARTIFACTS_BUCKET, BEANSTALK_APP_NAME):
-            raise Exception("Failed to create beanstalk release.")
 
     # Wait for the new version to be consistent before deploying
     wait_until_env_be_ready(beanstalkclient, BLUE_ENV_NAME)

@@ -29,8 +29,9 @@ def main():
     print(f"S3_ARTIFACTS_BUCKET = {S3_ARTIFACTS_BUCKET}\n")
     print(f"S3_ARTIFACTS_OBJECT {S3_ARTIFACTS_OBJECT}\n")
 
-    available_execution_types = ["deploy", "cutover", "full", "rollback", "redeploy"]
+    available_execution_types = ["deploy", "cutover", "full", "rollback"]
     execution_type: str = str(sys.argv[1])
+
 
     if execution_type not in available_execution_types:
         print("Not valid execution type argument: " + execution_type)
@@ -101,8 +102,7 @@ def main():
         try:
             print("New release deployment initiated.")
             start_3 = time.time()
-            deploy_release.release_deployment(S3_ARTIFACTS_OBJECT, S3_ARTIFACTS_BUCKET, BLUE_ENV_NAME,
-                                              BEANSTALK_APP_NAME, boto_authenticated_client)
+            deploy_release.release_deployment(BLUE_ENV_NAME, BEANSTALK_APP_NAME, boto_authenticated_client)
             print(f"New release deployment has finished successfully!\n\
                     \tIt took: {time.time() - start_3} seconds\n")
         except Exception as err:
@@ -188,20 +188,6 @@ def main():
             traceback.print_exc()
             sys.exit(1)
         print("Rollback has finished successfully!")
-
-    # Start redeploy phase
-    if execution_type == "redeploy":
-        try:
-            print("Initiating Re-Deployment of the previous version.")
-            deploy_release.release_deployment(S3_ARTIFACTS_OBJECT, S3_ARTIFACTS_BUCKET, BLUE_ENV_NAME,
-                                              BEANSTALK_APP_NAME, boto_authenticated_client, create_app_version=False)
-        except Exception as err:
-            print("Re-Deployment of the previous version has failed!")
-            print(("Error: " + str(err)))
-            e = sys.exc_info()[0]
-            print(e)
-            traceback.print_exc()
-            sys.exit(1)
 
     print("Deployment has finished successfully!")
     print(f"The process took: {round((time.time() - starting_time), 2)} seconds")
