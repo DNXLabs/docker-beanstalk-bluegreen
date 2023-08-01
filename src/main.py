@@ -1,4 +1,3 @@
-
 import os
 import traceback
 import sys
@@ -9,6 +8,8 @@ import deploy_release
 import release_health_check
 import terminate_green_env
 import aws_authentication
+from state_manager import state
+import state_manager
 import time
 
 
@@ -21,6 +22,9 @@ def main():
     BEANSTALK_APP_NAME = os.getenv("BEANSTALK_APP_NAME")
     S3_ARTIFACTS_BUCKET = os.getenv("S3_ARTIFACTS_BUCKET")
     S3_ARTIFACTS_OBJECT = os.getenv("S3_ARTIFACTS_OBJECT")
+    VERSION_LABEL = os.getenv("VERSION_LABEL")
+
+
 
     print("Environment variables: \n")
     print(f"BLUE_ENV_NAME = {BLUE_ENV_NAME}\n")
@@ -29,9 +33,8 @@ def main():
     print(f"S3_ARTIFACTS_BUCKET = {S3_ARTIFACTS_BUCKET}\n")
     print(f"S3_ARTIFACTS_OBJECT {S3_ARTIFACTS_OBJECT}\n")
 
-    available_execution_types = ["deploy", "cutover", "full", "rollback"]
+    available_execution_types = ["deploy", "cutover", "full", "rollback", "debug"]
     execution_type: str = str(sys.argv[1])
-
 
     if execution_type not in available_execution_types:
         print("Not valid execution type argument: " + execution_type)
@@ -39,6 +42,7 @@ def main():
             "Available execution types are: \n\
             -> deploy: Create a new environment, swap URL's and deploy the new release.\n\
             -> cutover: Apply health checks, reswap URL's and terminate environments.\n\
+            -> rollback: Rollback to the previous version.\n\
             -> full: Apply deploy and then cutover"
         )
         sys.exit(1)
@@ -47,7 +51,12 @@ def main():
     print(f"\n Execution Type: {execution_type}\n")
     print("Initiating blue green deployment process")
 
-    if execution_type == "deploy" or execution_type == "full":
+    print("Initializing state...")
+    state_manager.initialize_state(boto_authenticated_client)
+    state_manager.save_state(boto_authenticated_client)
+
+
+    if execution_type in ["deploy", "full"]:
         print("\n\n\n ------------------ Stating Deployment Step 1 --------------------- \n")
         print("------------------ Creating Green Env --------------------- \n\n\n")
 
@@ -59,6 +68,7 @@ def main():
                 BLUE_ENV_NAME, GREEN_ENV_NAME, BEANSTALK_APP_NAME, S3_ARTIFACTS_BUCKET, boto_authenticated_client)
             print(f"Clonning the blue environment has finished successfully!\n\
                   \tIt took: {time.time() - start_1} seconds\n")
+            state["status"] = "1. deploy - green_env_created - success"
         except Exception as err:
             clone_blue_environment.rollback_created_env(
                 boto_authenticated_client, GREEN_ENV_NAME
@@ -67,6 +77,7 @@ def main():
             print(("Error: " + str(err)))
             e = sys.exc_info()[0]
             print(str(e))
+            state["status"] = "1. deploy - green_env_created - failed"
             traceback.print_exc()
             sys.exit(1)
 
@@ -82,6 +93,8 @@ def main():
                                   BEANSTALK_APP_NAME, boto_authenticated_client)
             print(f"Swapping environment Domains has finished successfully!\n\
                     \tIt took: {time.time() - start_2} seconds\n")
+            state["status"] = "2. deploy - swap_environment - success"
+
         except Exception as err:
             print("Swap environment has failed.")
             print(("Error: " + str(err)))
@@ -89,6 +102,7 @@ def main():
                 boto_authenticated_client, S3_ARTIFACTS_BUCKET, GREEN_ENV_NAME, BLUE_ENV_NAME)
             clone_blue_environment.rollback_created_env(
                 boto_authenticated_client, GREEN_ENV_NAME)
+            state["status"] = "2. deploy - swap_environment - failed"
             e = sys.exc_info()[0]
             print(e)
             traceback.print_exc()
@@ -98,33 +112,37 @@ def main():
         print("\n\n\n ------------------ Stating Step 3 --------------------- \n")
         print("----------------- New release Deployment --------------------- \n\n\n")
 
-        ## Step 3: Deploying the new release into the blue env.
+        # Step 3: Deploying the new release into the blue env.
         try:
             print("New release deployment initiated.")
             start_3 = time.time()
             deploy_release.release_deployment(BLUE_ENV_NAME, BEANSTALK_APP_NAME, boto_authenticated_client)
             print(f"New release deployment has finished successfully!\n\
                     \tIt took: {time.time() - start_3} seconds\n")
+            state["status"] = "3. deploy - deploy_new_release - success"
         except Exception as err:
             print("New release deployment has failed.")
             print(("Error: " + str(err)))
             e = sys.exc_info()[0]
             print(e)
+            state["status"] = "3. deploy - deploy_new_release - failed"
             traceback.print_exc()
             sys.exit(1)
 
     # Start cutover phase
-    if execution_type == "cutover" or execution_type == "full":
+    if execution_type in ["cutover", "full"]:
         # Step 4: Health checking new release deployment.
         try:
             print("Health checking the new release.")
             release_health_check.main(BLUE_ENV_NAME, boto_authenticated_client)
             print("Environment is healthy!")
+            state["status"] = "4. cutover - health_check - success"
         except Exception as err:
             print("Environment health check has failed!")
             print(("Error: " + str(err)))
             e = sys.exc_info()[0]
             print(e)
+            state["status"] = "4. cutover - health_check - failed"
             traceback.print_exc()
             sys.exit(1)
 
@@ -191,7 +209,6 @@ def main():
 
     print("Deployment has finished successfully!")
     print(f"The process took: {round((time.time() - starting_time), 2)} seconds")
-
 
 
 if __name__ == "__main__":
