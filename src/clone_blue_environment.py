@@ -120,7 +120,7 @@ def rollback_created_env(boto_authenticated_client, environment_name):
         EnvironmentName=environment_name,
         EnvironmentId=green_env_info["Environments"][0]["EnvironmentId"]
     )
-    return "{environment_name} terminated successfully!!"
+    return f"{environment_name} terminated successfully!!"
 
 def get_current_release_package(client, application_name):
     response = client.describe_application_versions(

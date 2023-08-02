@@ -117,9 +117,9 @@ def main():
     if execution_type == "cutover" or execution_type == "full":
         # Step 4: Health checking new release deployment.
         try:
-            print("Health checking the new release on {BLUE_ENV_NAME} env.")
+            print(f"Health checking the new release on {BLUE_ENV_NAME} env.")
             release_health_check.main(BLUE_ENV_NAME, boto_authenticated_client)
-            print("{BLUE_ENV_NAME} Environment is healthy!")
+            print(f"{BLUE_ENV_NAME} Environment is healthy!")
         except Exception as err:
             print("Environment health check has failed!")
             print(("Error: " + str(err)))
@@ -150,7 +150,7 @@ def main():
     # Start rollback phase
     if execution_type == "rollback":
         try:
-            print("Rolling back the blue environment to the specific version label {VERSION_LABEL}.")
+            print(f"Rolling back the blue environment to the specific version label {VERSION_LABEL}.")
             deploy_release.rollback_release(boto_authenticated_client, BEANSTALK_APP_NAME, BLUE_ENV_NAME, VERSION_LABEL)
             print("Rolling back the blue environment to the specific version label {VERSION_LABEL} successful.")
         except Exception as err:

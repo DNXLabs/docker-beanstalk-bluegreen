@@ -5,6 +5,8 @@ import swap_environment
 
 
 def release_deployment(BLUE_ENV_NAME, BEANSTALK_APP_NAME, VERSION_LABEL, boto_authenticated_client):
+
+
     try:
         beanstalkclient = boto_authenticated_client.client('elasticbeanstalk')
     except ClientError as err:
@@ -60,10 +62,10 @@ def deploy_new_version(beanstalkclient, BEANSTALK_APP_NAME, BLUE_ENV_NAME, VERSI
             VersionLabel=VERSION_LABEL,
         )
     except ClientError as err:
-        print("Failed to update {BLUE_ENV_NAME} environment.\n" + str(err))
+        print(f"Failed to update {BLUE_ENV_NAME} environment.\n" + str(err))
         return False
 
-    print("The new version {VERSION_LABEL} was deployed successfully on {BLUE_ENV_NAME}!")
+    print(f"The new version {VERSION_LABEL} was deployed successfully on {BLUE_ENV_NAME}!")
     print(
         f"New version environment URL: http://{response['EnvironmentName']}.elasticbeanstalk.com")
     return True
@@ -102,4 +104,4 @@ def rollback_release(client, application_name, environment_name, VERSION_LABEL):
             beanstalkclient, environment_name)
 
     if not deploy_new_version(beanstalkclient, application_name, environment_name, VERSION_LABEL):
-        raise Exception("Failed to rollback to the version {VERSION_LABEL} on {environment_name}.")
+        raise Exception(f"Failed to rollback to the version {VERSION_LABEL} on {environment_name}.")
