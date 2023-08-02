@@ -74,7 +74,7 @@ def get_environment_information(beanstalkclient, EnvName):
         time.sleep(60)
 
         if env_count == 3:
-            print("Waiting the env be ready.")
+            print("Waiting for {EnvName} env to be ready.")
             env_count = 0
         else:
             env_count += 1

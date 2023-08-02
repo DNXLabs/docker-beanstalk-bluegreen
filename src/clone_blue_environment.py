@@ -88,7 +88,7 @@ def create_green_environment(beanstalkclient, env_name, config_template, app_ver
             print(
                 f"Existing Environment - {env_name} - it is in a Valid Status: {GetEnvData[0]['Status']}")
             return (GetEnvData[0]['EnvironmentId']), did_new_env_was_created
-    print("Creating a new Environment")
+    print("Creating a new Green Environment")
     response = beanstalkclient.create_environment(
         ApplicationName=app_name,
         EnvironmentName=env_name,
@@ -120,7 +120,7 @@ def rollback_created_env(boto_authenticated_client, environment_name):
         EnvironmentName=environment_name,
         EnvironmentId=green_env_info["Environments"][0]["EnvironmentId"]
     )
-    return "Environment terminaated successfully!!"
+    return "{environment_name} terminated successfully!!"
 
 def get_current_release_package(client, application_name):
     response = client.describe_application_versions(
