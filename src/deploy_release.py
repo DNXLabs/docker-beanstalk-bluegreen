@@ -3,11 +3,9 @@ from botocore.exceptions import ClientError
 import os
 import swap_environment
 
-def release_deployment(BLUE_ENV_NAME, BEANSTALK_APP_NAME, boto_authenticated_client):
-    VERSION_LABEL = strftime("%Y%m%d%H%M%S")
 
-    if "VERSION_LABEL" in os.environ:
-        VERSION_LABEL = os.environ['VERSION_LABEL']
+def release_deployment(BLUE_ENV_NAME, BEANSTALK_APP_NAME, VERSION_LABEL, boto_authenticated_client):
+
 
     try:
         beanstalkclient = boto_authenticated_client.client('elasticbeanstalk')
@@ -64,10 +62,10 @@ def deploy_new_version(beanstalkclient, BEANSTALK_APP_NAME, BLUE_ENV_NAME, VERSI
             VersionLabel=VERSION_LABEL,
         )
     except ClientError as err:
-        print("Failed to update environment.\n" + str(err))
+        print(f"Failed to update {BLUE_ENV_NAME} environment.\n" + str(err))
         return False
 
-    print("The new version was deployed successfully!")
+    print(f"The new version {VERSION_LABEL} was deployed successfully on {BLUE_ENV_NAME}!")
     print(
         f"New version environment URL: http://{response['EnvironmentName']}.elasticbeanstalk.com")
     return True
@@ -89,12 +87,14 @@ def get_env_info(beanstalkclient, env_name):
         ])
     return response
 
-def rollback_release(client, application_name, environment_name):
+
+def rollback_release(client, application_name, environment_name, VERSION_LABEL):
     try:
         beanstalkclient = client.client('elasticbeanstalk')
     except ClientError as err:
         print("Failed to create boto3 beanstalk client.\n" + str(err))
         return False
+
     environment_info, client = swap_environment.get_environment_information(
         beanstalkclient, environment_name)
 
@@ -103,11 +103,5 @@ def rollback_release(client, application_name, environment_name):
         environment_info, client = swap_environment.get_environment_information(
             beanstalkclient, environment_name)
 
-    response = beanstalkclient.describe_application_versions(
-        ApplicationName=application_name,
-        MaxRecords=2
-    )
-    VERSION_LABEL = response['ApplicationVersions'][-1]['VersionLabel']
-
     if not deploy_new_version(beanstalkclient, application_name, environment_name, VERSION_LABEL):
-        raise Exception("Failed to deploy new version.")
+        raise Exception(f"Failed to rollback to the version {VERSION_LABEL} on {environment_name}.")
