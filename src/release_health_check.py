@@ -36,8 +36,8 @@ def get_env_info(beanstalkclient, env_name):
 
 def wait_until_env_be_ready(beanstalkclient, ENV_NAME):
     env_info = get_env_info(beanstalkclient, ENV_NAME)
-    while env_info["Environments"][0]["Status"] != "Ready":
-        print("Waiting the blue environment be Ready!")
+    while ((env_info["Environments"][0]["Status"] != "Ready") and (env_info["Environments"][0]["HealthStatus"] != "Ok")):
+        print("Waiting the blue environment to be Ready and Healthy!")
         time.sleep(10)
         env_info = get_env_info(beanstalkclient, ENV_NAME)
     return "Env is ready"

@@ -14,7 +14,7 @@ def main(BLUE_ENV_NAME, GREEN_ENV_NAME, BEANSTALK_APP_NAME, boto_authenticated_c
         DeleteConfigTemplate=delete_config_template_blue(beanstalkclient, AppName=(BEANSTALK_APP_NAME), TempName=(CREATE_CONFIG_TEMPLATE_NAME))
         print(DeleteConfigTemplate)
         #re-swapping the urls
-        print("Swapping URL's")
+        print("Swapping URL's back!")
         reswap = swap_green_blue(beanstalkclient, SourceEnv=(BLUE_ENV_NAME), DestEnv=(GREEN_ENV_NAME))
         if reswap == "Failure":
             print("Re-Swap did not happen")
@@ -38,7 +38,7 @@ def delete_config_template_blue(beanstalkclient, AppName, TempName):
 
 def swap_green_blue(beanstalkclient, SourceEnv, DestEnv):
     GetEnvData = (beanstalkclient.describe_environments(EnvironmentNames=[SourceEnv,DestEnv],IncludeDeleted=False))
-    if (((GetEnvData['Environments'][0]['Status']) == "Ready") and ((GetEnvData['Environments'][1]['Status']) == "Ready")):
+    if (((GetEnvData['Environments'][0]['Status']) == "Ready") and ((GetEnvData['Environments'][0]['HealthStatus']) == "Ok") and ((GetEnvData['Environments'][1]['Status']) == "Ready") and ((GetEnvData['Environments'][1]['HealthStatus']) == "Ok")):
         response = beanstalkclient.swap_environment_cnames(SourceEnvironmentName=SourceEnv,DestinationEnvironmentName=DestEnv)
         return ("Successful")
     else:

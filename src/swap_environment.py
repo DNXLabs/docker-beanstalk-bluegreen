@@ -38,7 +38,7 @@ def main(BLUE_ENV_NAME, GREEN_ENV_NAME, S3_ARTIFACTS_BUCKET, BEANSTALK_APP_NAME,
     if blue_env_url == green_env_cname:
         print("Nothing to swap")
     else:
-        while green_env_info["Environments"][0]["Status"] != "Ready":
+        while ((green_env_info["Environments"][0]["Status"] != "Ready") and (green_env_info["Environments"][0]["Health"] != "Green") and (green_env_info["Environments"][0]["HealthStatus"] != "Ok")):
             time.sleep(10)
             green_env_info = get_environment_information(
                 beanstalkclient, GREEN_ENV_NAME)
@@ -74,7 +74,7 @@ def get_environment_information(beanstalkclient, EnvName):
         time.sleep(60)
 
         if env_count == 3:
-            print(f"Waiting for {EnvName} env to be ready.")
+            print(f"Waiting for {EnvName} env to be ready and Healthy.")
             env_count = 0
         else:
             env_count += 1
@@ -87,7 +87,7 @@ def swap_urls(beanstalkclient, SourceEnv, DestEnv):
     green_env_data = (beanstalkclient.describe_environments(
         EnvironmentNames=[SourceEnv, DestEnv], IncludeDeleted=False))
     print(green_env_data)
-    if (((green_env_data["Environments"][0]["Status"]) == "Ready") and ((green_env_data["Environments"][1]["Status"]) == "Ready")):
+    if (((green_env_data["Environments"][0]["Status"]) == "Ready") and ((green_env_data["Environments"][0]["HealthStatus"]) == "Ok") and ((green_env_data["Environments"][1]["Status"]) == "Ready") and ((green_env_data["Environments"][1]["HealthStatus"]) == "Ok")):
         beanstalkclient.swap_environment_cnames(
             SourceEnvironmentName=SourceEnv, DestinationEnvironmentName=DestEnv)
         return ("Successful")
