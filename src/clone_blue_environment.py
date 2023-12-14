@@ -1,6 +1,7 @@
 import json
 import time
 import os
+import swap_environment
 
 # noqa: E502
 
@@ -32,6 +33,17 @@ def main(BLUE_ENV_NAME, GREEN_ENV_NAME, BEANSTALK_APP_NAME, S3_ARTIFACTS_BUCKET,
         )
 
         print("Green environment ID: " + green_env_id)
+        print("Wating for the Green environment to be Ready and Healthy\n")
+
+        green_env_info, beanstalkclient = swap_environment.get_environment_information(
+        beanstalkclient, GREEN_ENV_NAME)
+        while ((green_env_info["Environments"][0]["Status"] != "Ready") and (green_env_info["Environments"][0]["Health"] != "Green") and (green_env_info["Environments"][0]["HealthStatus"] != "Ok")):
+            time.sleep(10)
+            green_env_info,beanstalkclient = swap_environment.get_environment_information(
+                beanstalkclient, GREEN_ENV_NAME)
+        
+        print("Green environment is Ready and Healthy\n")
+
         if green_env_id and did_new_env_was_created:
             # Create a CNAME Config file
             blue_env_cname = blue_env_info['Environments'][0]['CNAME']
